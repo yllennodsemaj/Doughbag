@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">DoughBag</string>
+    <string name="rollBtnTxt">Roll!</string>
+    <string name="spinBtnTxt">Spin</string>
+</resources>
