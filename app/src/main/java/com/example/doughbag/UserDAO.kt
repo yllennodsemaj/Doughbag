@@ -25,6 +25,6 @@ interface UserDao {
     fun getBalance(user_ID: Int): Flow<Double>
 
     @Query("update users set balance = balance + :amount where user_ID = :user_ID")
-    fun updateBalance(user_ID: Int, amount: Double)
+    suspend fun updateBalance(user_ID: Int, amount: Double): Int
 
 }

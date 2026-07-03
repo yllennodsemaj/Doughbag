@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
 
 // view model
 class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
@@ -50,8 +52,9 @@ class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
     }
 
     fun updateBalance(user_ID: Int, win: Double) {
-        viewModelScope.launch {
-            userDao.updateBalance(user_ID,win)
+        viewModelScope.launch(Dispatchers.IO) {
+            val rowsUpdated = userDao.updateBalance(user_ID, win)
+            Log.d("DatabaseDebug", "Rows updated: $rowsUpdated for User ID: $user_ID")
         }
     }
 }

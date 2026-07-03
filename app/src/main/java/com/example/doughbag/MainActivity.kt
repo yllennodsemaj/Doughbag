@@ -72,7 +72,7 @@ fun DoughbagNavigation() {
         composable("deleteUser") { DeleteUser(navController, viewModel) }
         composable("play") { Play(navController) }
         composable("roulette") { Roulette(navController) }
-        composable("craps") { Craps(navController) }
+        composable("craps") { Craps(navController, viewModel) }
         composable("slots") { Slots(navController, viewModel) }
         composable("shop") { Shop(navController) }
         composable("inventory") { Inventory(navController) }
@@ -258,15 +258,27 @@ class SlotCard(id: Int, res: Int) {
     val myRes = res
 }
 
+fun Bet(bet: Int, viewModel: DoughbagViewModel): Boolean {
+    val user: User? = viewModel.activeUser
+    var balance:Double? = 0.0
+    if(user != null) {
+        balance = user.balance
+        if(bet <= balance && bet >= 10) {
+            viewModel.updateBalance(user.user_ID, ( -1.0 * bet))
+            return true
+        }
+    }
+    return false
+}
+
 @Composable
 fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
     ForceLandscapeOrientation()
     val context = LocalContext.current
-    var balance: Double? = 0.0 // nullable double because User?
-    if (viewModel.activeUser != null) { // check if null
-        val activeUser:User? = viewModel.activeUser
-        balance = activeUser?.balance
-    }
+
+    var balance by remember {
+        mutableStateOf(viewModel.activeUser?.balance ?: 0.0)
+    } // praise AI
     val hearts = SlotCard(1, R.drawable.heart)
     val diamonds = SlotCard(2, R.drawable.diamond)
     val clubs = SlotCard(3, R.drawable.clover)
@@ -348,27 +360,30 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Button(onClick = {
-                var trueBalance= balance ?: 0.0
-                var canBet = trueBalance >= myBet
-                if(!canBet)
+                if(!Bet(myBet, viewModel))
                 {
-                    println("Not enough money")
+                    // change from toast to in game text?
                     Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
                     return@Button
                 }
 
+                val user: User? = viewModel.activeUser
+                if(user != null) {
+                    // update balance text to subtract current bet
+                    balance = balance.minus(myBet)
+                }
                 slot1 = slots[CasinoRng.nextInt(0, slots.size)]
                 slot2 = slots[CasinoRng.nextInt(0, slots.size)]
                 slot3 = slots[CasinoRng.nextInt(0, slots.size)]
 
                 if(slot1.myId == slot2.myId && slot2.myId == slot3.myId)
                 {
-                    val user: User? = viewModel.activeUser
+                    // update db Balance for win
                     val win: Double = (myBet * slot1.myId).toDouble()
                     if(user != null) {
                         viewModel.updateBalance(user.user_ID, win)
                     }
-
+                    // update to in game text
                     Toast.makeText(context, "You won $${myBet * slot1.myId}", Toast.LENGTH_SHORT).show()
                 }
             })
@@ -382,7 +397,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
 }
 
 @Composable
-fun Craps(navController: NavController){
+fun Craps(navController: NavController, viewModel: DoughbagViewModel){
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center) {
         Button(onClick = { navController.navigate("play") }) { Text("Exit game") }
