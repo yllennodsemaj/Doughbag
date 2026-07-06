@@ -34,6 +34,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.NamedNavArgument
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.doughbagwork.PurchasePage
+import com.example.doughbagwork.ShopList
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,9 +79,19 @@ fun DoughbagNavigation() {
         composable("roulette") { Roulette(navController) }
         composable("craps") { Craps(navController, viewModel) }
         composable("slots") { Slots(navController, viewModel) }
-        composable("shop") { Shop(navController) }
+        composable("shop") { ShopList(navController = navController) }
         composable("inventory") { Inventory(navController) }
         composable("stats") { Statistics(navController, viewModel) }
+        composable("purchasePage/{itemId}",
+            arguments = listOf(
+                navArgument("itemId") {type = NavType.IntType}
+            )) { backStackEntry ->
+                val itemId = backStackEntry.arguments?.getInt("itemId") ?: 0
+                PurchasePage(
+                    itemId = itemId,
+                    navController = navController
+                )
+        }
     }
 }
 @Composable

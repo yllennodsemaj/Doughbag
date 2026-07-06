@@ -1,9 +1,12 @@
 package com.example.doughbagwork
 
 import android.os.Bundle
+import android.util.Log.i
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.scrollable
@@ -28,12 +31,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.doughbag.R
+
+
+
+
 
 // Generic Scrollable View
 @Composable
@@ -50,12 +60,12 @@ fun ScrollPage(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
 }
 
 // Displays a list of items purchasable from shops
-@Preview(showBackground = true)
 @Composable
-fun Shop(modifier: Modifier = Modifier) {
+fun ShopList(modifier: Modifier = Modifier, navController: NavController) {
     ScrollPage(modifier) {
-        for (i in 0..20) {
-            ShopEntry(itemName = "Test $i")
+        ExitButton(navController = navController)
+        for ((i, item) in ShopResources.shopItems.withIndex()) {
+            ShopEntry(navController = navController, item=item, itemId = i)
         }
     }
 }
@@ -63,7 +73,7 @@ fun Shop(modifier: Modifier = Modifier) {
 // Displays a button that is used for the shop menu
 @Composable
 fun ShopButton(modifier: Modifier = Modifier, buttonLabel: String, onClick: () -> Unit) {
-    Button(onClick = {},
+    Button(onClick = onClick,
         shape = RoundedCornerShape(
             topStart = 16.dp,
             topEnd = 16.dp,
@@ -79,36 +89,69 @@ fun ShopButton(modifier: Modifier = Modifier, buttonLabel: String, onClick: () -
     }
 }
 
-// Makes an entry for the shop list view
-// TODO: Implement onClick to open a PurchasePage view with the proper item
 @Composable
-fun ShopEntry(modifier: Modifier = Modifier, itemName: String) {
-    ShopButton(modifier = modifier, buttonLabel = itemName, onClick = {})
+fun ExitButton(modifier: Modifier = Modifier, navController: NavController) {
+    ShopButton(modifier, "Exit") {
+        navController.popBackStack()
+    }
+}
+
+// Makes an entry for the shop list view
+@Composable
+fun ShopEntry(modifier: Modifier = Modifier, navController: NavController, item: ShopItemData, itemId: Int) {
+    val itemName: String = stringResource(item.nameRes)
+
+    ShopButton(modifier = modifier, buttonLabel = itemName, onClick = {
+        println("purchasePage/$itemName")
+        navController.navigate("purchasePage/$itemId")
+    })
 }
 
 
 // Shows information about an item before purchasing
 // TODO: Add purchase method to button
-// TODO: Load the currently viewed item's information
-// TODO: Replace the goat image with the item's image
 @Composable
-fun PurchasePage(modifier: Modifier = Modifier, itemName: String) {
-    //val image = painterResource(R.drawable.goat)
-    val image = painterResource(R.drawable.clover)
+fun PurchasePage(modifier: Modifier = Modifier, itemId: Int, navController: NavController) {
+    val itemData: ShopItemData = ShopResources.shopItems[itemId]
+
+    val itemName = stringResource(itemData.nameRes)
+    val itemDescription = stringResource(itemData.descriptionRes)
+    val image = painterResource(itemData.imageRes)
+
 
     ScrollPage(modifier) {
         Text(itemName, fontSize = 13.em, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         Image(image, contentDescription = "Test")
 
-        Text("Description", fontSize = 5.em)
+        Text(itemDescription, fontSize = 5.em)
 
         ShopButton(buttonLabel = "Purchase", onClick = {})
+        ExitButton(navController = navController)
+        //ShopButton(buttonLabel = "Exit", onClick = {navController.navigate("shop")})
     }
 }
 
-// Preview for the purchase page
-@Preview(showBackground = true, name = "test")
-@Composable
-fun PurchasePagePreview() {
-    PurchasePage(itemName = "Test 1")
+// TODO: Add more strings to the shopItemStrings.xml file, then reference them here
+object ShopResources {
+    public val shopItems: List<ShopItemData> = listOf(
+        ShopItemData(R.drawable.clover, R.string.item1_name, R.string.item1_description),
+        ShopItemData(R.drawable.heart, R.string.item2_name, R.string.item2_description)
+    )
+}
+
+
+class ShopItemData {
+    @StringRes
+    var nameRes: Int = 0
+    @StringRes
+    var descriptionRes: Int = 0
+    @DrawableRes
+    var imageRes: Int = 0
+
+
+    constructor(imageId: Int, nameId: Int, descriptionId: Int) {
+        imageRes = imageId
+        nameRes = nameId
+        descriptionRes = descriptionId
+    }
 }
