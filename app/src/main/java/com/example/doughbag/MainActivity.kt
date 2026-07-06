@@ -398,6 +398,163 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
 
 @Composable
 fun Craps(navController: NavController, viewModel: DoughbagViewModel){
+    ForceLandscapeOrientation()
+    val context = LocalContext.current
+
+    var balance by remember {
+        mutableStateOf(viewModel.activeUser?.balance ?: 0.0)
+    }
+
+    var diceResult1 by remember  { mutableStateOf(1) }
+    var diceResult2 by remember  { mutableStateOf(2) }
+
+    val imageResource1 = when (diceResult1) {
+        1 -> R.drawable.dice_1
+        2 -> R.drawable.dice_2
+        3 -> R.drawable.dice_3
+        4 -> R.drawable.dice_4
+        5 -> R.drawable.dice_5
+        else -> R.drawable.dice_6
+    }
+
+    val imageResource2 = when (diceResult2) {
+        1 -> R.drawable.dice_1
+        2 -> R.drawable.dice_2
+        3 -> R.drawable.dice_3
+        4 -> R.drawable.dice_4
+        5 -> R.drawable.dice_5
+        else -> R.drawable.dice_6
+    }
+
+    var myBet by remember { mutableStateOf(10) }
+
+    Box(
+        modifier = Modifier
+            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
+            .padding(10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Balance: ",
+                color = Color.Gray,
+                fontSize = 15.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "$balance $",
+                color = Color(0xFF2E7D32),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+
+        OutlinedTextField(
+            value = myBet.toString(),
+            onValueChange = { myBet = it.toIntOrNull() ?: 0 },
+            label = { Text("Bet") },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            ),
+            modifier = Modifier
+                .padding(5.dp)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
+        {
+            Image(
+                painter = painterResource(imageResource1),
+                contentDescription = "dice 1",
+                modifier = Modifier.size(100.dp)
+            )
+
+            Image(
+                painter = painterResource(imageResource2),
+                contentDescription = "dice 2",
+                modifier = Modifier.size(100.dp)
+            )
+
+            var isFirstClick by remember { mutableStateOf(true) }
+            var pointValue by remember { mutableStateOf(0) }
+
+            Button(onClick = {
+                diceResult1 = CasinoRng.nextInt(1, 6)
+                println(diceResult1)
+                diceResult2 = CasinoRng.nextInt(1, 6)
+                println(diceResult2)
+
+                val sum = diceResult1 + diceResult2
+
+                if (isFirstClick) {
+                    if (!Bet(myBet, viewModel)) {
+                        Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    val user: User? = viewModel.activeUser
+                    if(user != null) {
+                        // update balance text to subtract current bet
+                        balance = balance.minus(myBet)
+                    }
+
+                    when (sum) {
+                        7, 11 -> {
+                            balance += myBet * 2
+                            Toast.makeText(context, "You won $${myBet * 2}", Toast.LENGTH_SHORT)
+                                .show()
+                            isFirstClick = true
+                            return@Button
+                        }
+
+                        2, 3, 12 -> {
+                            Toast.makeText(context, "You lost", Toast.LENGTH_SHORT).show()
+                            isFirstClick = true
+                            return@Button
+                        }
+
+                        else -> {
+                            pointValue = sum
+                            Toast.makeText(context, "Keep rolling", Toast.LENGTH_SHORT).show()
+                            isFirstClick = false
+                        }
+                    }
+                } else {
+                    when (sum) {
+                        pointValue -> {
+                            balance += myBet * 2
+                            Toast.makeText(context, "You won $${myBet * 2}", Toast.LENGTH_SHORT)
+                                .show()
+                            isFirstClick = true
+                            return@Button
+                        }
+
+                        7 -> {
+                            Toast.makeText(context, "You lost", Toast.LENGTH_SHORT).show()
+                            isFirstClick = true
+                            return@Button
+                        }
+
+                        else -> {
+                            Toast.makeText(context, "Keep rolling", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+            })
+            {
+                Text(text = stringResource(R.string.rollBtnTxt))
+            }
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center) {
         Button(onClick = { navController.navigate("play") }) { Text("Exit game") }
