@@ -11,7 +11,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 
 // view model
-class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
+class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinDao) : ViewModel() {
 
     // pulls live list of users from db
     // stateflow auto updates live data
@@ -59,11 +59,15 @@ class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
     }
 }
 
-class DoughbagViewModelFactory(private val userDao: UserDao) : ViewModelProvider.Factory {
+class DoughbagViewModelFactory(
+    private val userDao: UserDao,
+    private val skinDao: SkinDao
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        // This MUST check for DoughbagViewModel
         if (modelClass.isAssignableFrom(DoughbagViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return DoughbagViewModel(userDao) as T
+            return DoughbagViewModel(userDao, skinDao) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
