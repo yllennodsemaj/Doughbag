@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,9 +32,19 @@ import com.example.doughbag.ui.theme.DoughbagTheme
 import java.security.SecureRandom
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,21 +73,29 @@ fun DoughbagNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val database = AppDatabase.getDatabase(context)
-    val viewModel: DoughbagViewModel = viewModel(
-        factory = DoughbagViewModelFactory(database.userDao())
+
+    val userViewModel: DoughbagViewModel = viewModel(
+        factory = DoughbagViewModelFactory(
+            userDao = database.userDao(),
+            skinDao = database.skinDao()
+        )
     )
+    val skinViewModel: SkinViewModel = viewModel(
+        factory = SkinViewModel.SkinViewModelFactory(database.skinDao())
+    )
+
     NavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(navController) }
-        composable("chooseUser") { ChooseUser(navController, viewModel) }
-        composable("createUser") { CreateUser(navController, viewModel) }
-        composable("deleteUser") { DeleteUser(navController, viewModel) }
+        composable("chooseUser") { ChooseUser(navController, userViewModel) }
+        composable("createUser") { CreateUser(navController, userViewModel) }
+        composable("deleteUser") { DeleteUser(navController, userViewModel) }
         composable("play") { Play(navController) }
         composable("roulette") { Roulette(navController) }
-        composable("craps") { Craps(navController, viewModel) }
-        composable("slots") { Slots(navController, viewModel) }
-        composable("shop") { Shop(navController) }
-        composable("inventory") { Inventory(navController) }
-        composable("stats") { Statistics(navController, viewModel) }
+        composable("craps") { Craps(navController, userViewModel) }
+        composable("slots") { Slots(navController, userViewModel) }
+        composable("shop") { Shop(navController,userViewModel, skinViewModel) }
+        composable("inventory") { Inventory(navController, userViewModel, skinViewModel) }
+        composable("stats") { Statistics(navController, userViewModel) }
     }
 }
 @Composable
@@ -198,35 +217,90 @@ fun ChooseUser(navController: NavController, viewModel: DoughbagViewModel) {
 
 @Composable // after choosing a user, select a game to play, or shop, inventory, or go back home
 fun Play(navController: NavController) {
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-        Row(modifier = Modifier.fillMaxWidth(), Arrangement.SpaceEvenly) {
-            IconButton(onClick = { navController.navigate("roulette") }) {
-                Icon(
+    ForceLandscapeOrientation()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Roulette button
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clickable { navController.navigate("roulette") },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
                     painter = painterResource(id = R.drawable.roulette_icon),
                     contentDescription = "Play roulette",
-                    tint = Color.Unspecified
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .weight(1.2f)
+                        .fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Roulette", fontSize = 16.sp)
             }
-            IconButton(onClick = { navController.navigate("craps") }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.craps_icon),
-                    contentDescription = "Play craps",
-                    tint = Color.Unspecified
-                )
-            }
-            IconButton(onClick = { navController.navigate("slots")}) {
-                Icon(
-                    painter = painterResource(id = R.drawable.slots_icon),
-                    contentDescription = "Play slots",
-                    tint = Color.Unspecified
-                )
-            }
-        }
+                // Craps button
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable { navController.navigate("craps") },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.craps_icon),
+                        contentDescription = "Play craps",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Craps", fontSize = 16.sp)
+                }
+                    // Slots button
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable { navController.navigate("slots") },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.slots_icon),
+                            contentDescription = "Play slots",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "Slots", fontSize = 16.sp)
+                    }
+                }
+
+
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(onClick = { navController.navigate("stats") }) { Text("View Stats") }
             Button(onClick = { navController.navigate("inventory") }) { Text("Inventory") }
             Button(onClick = { navController.navigate("shop") }) { Text("Shop") }
         }
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(onClick = { navController.navigate("chooseUser") }) { Text("Back to Users") }
             Button(onClick = { navController.navigate("deleteUser") }) { Text("Delete User") }
@@ -562,45 +636,97 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel){
     }
 }
 
-@Composable
-fun Statistics(navController: NavController, viewModel: DoughbagViewModel){
-    val getUser = viewModel.activeUser
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center) {
-        if( getUser != null ) {
-            Text("User statistics for: ${getUser.user_name}")
+    @Composable
+    fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
+        val getUser = viewModel.activeUser
+        Column(
+            modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (getUser != null) {
+                Text("User statistics for: ${getUser.user_name}")
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Total Wins: ${getUser.total_wins}")
+                Text("Slot Wins: ${getUser.sWins}")
+                Text("Craps Wins: ${getUser.cWins}")
+                Text("Roulette Wins: ${getUser.rWins}")
+                Text("Total Losses: ${getUser.total_losses}")
+                Text("Slot Losses: ${getUser.sLosses}")
+                Text("Craps Losses: ${getUser.cLosses}")
+                Text("Roulette Losses: ${getUser.rLosses}")
+                Text("Total winnings: \$${getUser.winnings}")
+                Text("Total losses: \$${getUser.losses}")
+            } else {
+                Text("No active user!")
+            }
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Total Wins: ${getUser.total_wins}")
-            Text("Slot Wins: ${getUser.sWins}")
-            Text("Craps Wins: ${getUser.cWins}")
-            Text("Roulette Wins: ${getUser.rWins}")
-            Text("Total Losses: ${getUser.total_losses}")
-            Text("Slot Losses: ${getUser.sLosses}")
-            Text("Craps Losses: ${getUser.cLosses}")
-            Text("Roulette Losses: ${getUser.rLosses}")
-            Text("Total winnings: \$${getUser.winnings}")
-            Text("Total losses: \$${getUser.losses}")
-        } else {
-            Text("No active user!")
+            Button(onClick = { navController.navigate("play") }) { Text("Go back") }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { navController.navigate("play") }) { Text("Go back") }
     }
-}
 
-@Composable
-fun Shop(navController: NavController){
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center) {
-        Button(onClick = { navController.navigate("play") }) { Text("Go back") }
-        Button(onClick = { println("You bought a skin") }) { Text("Buy Skin") }
-    }
-}
+    @Composable
+    fun Shop(
+        navController: NavController,
+        userViewModel: DoughbagViewModel,
+        skinViewModel: SkinViewModel
+    ) {
+        val currentUser = userViewModel.activeUser
+        LaunchedEffect(currentUser) {
+            currentUser?.let { skinViewModel.loadSkinsForUser(it.user_ID) }
+        }
+        // Observe ONLY the shop skins
+        val shopSkins by skinViewModel.shopSkins.collectAsState()
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Skin Shop", fontSize = 24.sp)
+            LazyColumn {
+                items(shopSkins) { skin ->
+                    Button(onClick = {
+                        // Trigger the transaction we talked about earlier!
+                        println("Triggering purchase logic for ${skin.skinName}")
+                    }) {
+                        Text("Buy ${skin.skinName} for $${skin.skinPrice}")
+                    }
+                }
 
-@Composable
-fun Inventory(navController: NavController){
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center) {
-        Button(onClick = { navController.navigate("play") }) { Text("Go back") }
+            }
+            Button(onClick = { navController.navigate("play") }) { Text("Go back") }
+        }
     }
-}
+
+    @Composable
+    fun Inventory(
+        navController: NavController,
+        userViewModel: DoughbagViewModel, // Handles user balance, ID, auth state
+        skinViewModel: SkinViewModel  // Handles available skins, active skin
+    ) {
+        val currentUser = userViewModel.activeUser // Assuming you have access to this
+
+        // Tell ViewModel to load this user's data
+        LaunchedEffect(currentUser) {
+            currentUser?.let { skinViewModel.loadSkinsForUser(it.user_ID) }
+        }
+
+        // Observe ONLY the inventory skins
+        val mySkins by skinViewModel.inventorySkins.collectAsState()
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("My Inventory", fontSize = 24.sp)
+
+            LazyColumn {
+                items(mySkins) { skin ->
+                    Button(onClick = {
+                        skinViewModel.setActiveSkin(skin)
+                        navController.navigate("play")
+                    }) {
+                        Text("Equip ${skin.skinName}")
+                    }
+                }
+            }
+        }
+    }

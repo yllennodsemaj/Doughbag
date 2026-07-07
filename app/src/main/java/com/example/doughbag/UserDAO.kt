@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface UserDao {
     @Insert
-    suspend fun insertUser(user: User)
+    suspend fun insertUser(user: User): Long
 
     @Delete
     suspend fun deleteUser(user: User)
@@ -26,5 +26,8 @@ interface UserDao {
 
     @Query("update users set balance = balance + :amount where user_ID = :user_ID")
     suspend fun updateBalance(user_ID: Int, amount: Double): Int
+
+    @Query("SELECT balance FROM users WHERE user_ID = :user_ID")
+    suspend fun getBalanceSync(user_ID: Int): Double
 
 }

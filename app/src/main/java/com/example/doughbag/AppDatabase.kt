@@ -10,6 +10,7 @@ import androidx.room.RoomDatabase
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
+    abstract fun skinDao(): SkinDao
 
     companion object {
         @Volatile
