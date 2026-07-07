@@ -471,7 +471,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
 }
 
 @Composable
-fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
+fun Craps(navController: NavController, viewModel: DoughbagViewModel){
     ForceLandscapeOrientation()
     val context = LocalContext.current
 
@@ -479,8 +479,8 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         mutableStateOf(viewModel.activeUser?.balance ?: 0.0)
     }
 
-    var diceResult1 by remember { mutableStateOf(1) }
-    var diceResult2 by remember { mutableStateOf(2) }
+    var diceResult1 by remember  { mutableStateOf(1) }
+    var diceResult2 by remember  { mutableStateOf(2) }
 
     val imageResource1 = when (diceResult1) {
         1 -> R.drawable.dice_1
@@ -574,7 +574,7 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                     }
 
                     val user: User? = viewModel.activeUser
-                    if (user != null) {
+                    if(user != null) {
                         // update balance text to subtract current bet
                         balance = balance.minus(myBet)
                     }
@@ -627,6 +627,12 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                 Text(text = stringResource(R.string.rollBtnTxt))
             }
         }
+    }
+
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center) {
+        Button(onClick = { navController.navigate("play") }) { Text("Exit game") }
+        Button(onClick = { println("You rolled the dice") }) { Text("Roll Dice") }
     }
 }
 
