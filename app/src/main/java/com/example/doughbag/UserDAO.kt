@@ -81,4 +81,7 @@ interface UserDao {
     @Query("select losses from users where user_ID = :userId")
     fun getLosses(userId: Int): Double
 
+    @Query("SELECT balance FROM users WHERE user_ID = :user_ID")
+    suspend fun getBalanceSync(user_ID: Int): Double
+
 }
