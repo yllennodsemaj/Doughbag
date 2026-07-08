@@ -440,8 +440,8 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Button(onClick = {
-                    val myBet = betNumber + betRed + betBlack + betHigh + betLow + betOdd + betEven * 1.0
-                    if (!Bet(myBet, viewModel) || betNumber < 0 || betNumber > 36) {
+                    val myBet = (betNumber + betRed + betBlack + betHigh + betLow + betOdd + betEven) * 1.0
+                    if (!Bet(myBet, viewModel) || myNumber < 0 || myNumber > 36) {
                         Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
@@ -456,10 +456,13 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                     if (winningPocket.myId == myNumber) { balance += betNumber * 36 }
                     if (winningPocket.myColor == "Red") { balance += betRed * 2 }
                     if (winningPocket.myColor == "Black") { balance += betBlack * 2 }
-                    if (winningPocket.myId % 2 == 1) { balance += betOdd * 2 }
-                    if (winningPocket.myId % 2 == 0) { balance += betEven * 2 }
-                    if (winningPocket.myId in 1..18) { balance += betLow * 2 }
-                    if (winningPocket.myId in 19..36) { balance += betHigh * 2 }
+                    // Zero is not even, odd, high, or low in roulette
+                    if (winningPocket.myId != 0) {
+                        if (winningPocket.myId % 2 == 1) { balance += betOdd * 2 }
+                        if (winningPocket.myId % 2 == 0) { balance += betEven * 2 }
+                        if (winningPocket.myId in 1..18) { balance += betLow * 2 }
+                        if (winningPocket.myId in 19..36) { balance += betHigh * 2 }
+                    }
                 }) {
                     Text(text = stringResource(R.string.spinBtnTxt))
                 }
@@ -474,7 +477,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 val fieldModifier = Modifier
-                    .height(54.dp)
+                    .height(70.dp)
                     .fillMaxWidth()
 
                 val textColors = TextFieldDefaults.colors(
@@ -484,62 +487,76 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                     unfocusedTextColor = Color.Black
                 )
 
-                OutlinedTextField(
-                    value = myNumber.toString(),
-                    onValueChange = { myNumber = it.toIntOrNull() ?: 0 },
-                    label = { Text("My Number", fontSize = 12.sp) },
-                    colors = textColors,
-                    modifier = fieldModifier
+                val textColors2 = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Gray,
+                    unfocusedContainerColor = Color.Gray,
+                    focusedTextColor = Color.Red,
+                    unfocusedTextColor = Color.Red
                 )
-                OutlinedTextField(
-                    value = betNumber.toString(),
-                    onValueChange = { betNumber = it.toIntOrNull() ?: 0 },
-                    label = { Text("Bet on Number", fontSize = 12.sp) },
-                    colors = textColors,
-                    modifier = fieldModifier
-                )
-                OutlinedTextField(
-                    value = betRed.toString(),
-                    onValueChange = { betRed = it.toIntOrNull() ?: 0 },
-                    label = { Text("Bet on Red", fontSize = 12.sp) },
-                    colors = textColors,
-                    modifier = fieldModifier
-                )
-                OutlinedTextField(
-                    value = betBlack.toString(),
-                    onValueChange = { betBlack = it.toIntOrNull() ?: 0 },
-                    label = { Text("Bet on Black", fontSize = 12.sp) },
-                    colors = textColors,
-                    modifier = fieldModifier
-                )
-                OutlinedTextField(
-                    value = betOdd.toString(),
-                    onValueChange = { betOdd = it.toIntOrNull() ?: 0 },
-                    label = { Text("Bet on Odd", fontSize = 12.sp) },
-                    colors = textColors,
-                    modifier = fieldModifier
-                )
-                OutlinedTextField(
-                    value = betEven.toString(),
-                    onValueChange = { betEven = it.toIntOrNull() ?: 0 },
-                    label = { Text("Bet on Even", fontSize = 12.sp) },
-                    colors = textColors,
-                    modifier = fieldModifier
-                )
-                OutlinedTextField(
-                    value = betLow.toString(),
-                    onValueChange = { betLow = it.toIntOrNull() ?: 0 },
-                    label = { Text("Bet on 1 to 18", fontSize = 12.sp) },
-                    colors = textColors,
-                    modifier = fieldModifier
-                )
-                OutlinedTextField(
-                    value = betHigh.toString(),
-                    onValueChange = { betHigh = it.toIntOrNull() ?: 0 },
-                    label = { Text("Bet on 19 to 36", fontSize = 12.sp) },
-                    colors = textColors,
-                    modifier = fieldModifier
-                )
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column(modifier = Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = myNumber.toString(),
+                            onValueChange = { myNumber = it.toIntOrNull() ?: 0 },
+                            label = { Text("My Number", fontSize = 12.sp) },
+                            colors = textColors2,
+                            modifier = fieldModifier
+                        )
+                        OutlinedTextField(
+                            value = betNumber.toString(),
+                            onValueChange = { betNumber = it.toIntOrNull() ?: 0 },
+                            label = { Text("Bet on Number", fontSize = 12.sp) },
+                            colors = textColors,
+                            modifier = fieldModifier
+                        )
+                        OutlinedTextField(
+                            value = betRed.toString(),
+                            onValueChange = { betRed = it.toIntOrNull() ?: 0 },
+                            label = { Text("Bet on Red", fontSize = 12.sp) },
+                            colors = textColors,
+                            modifier = fieldModifier
+                        )
+                        OutlinedTextField(
+                            value = betBlack.toString(),
+                            onValueChange = { betBlack = it.toIntOrNull() ?: 0 },
+                            label = { Text("Bet on Black", fontSize = 12.sp) },
+                            colors = textColors,
+                            modifier = fieldModifier
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Column(modifier = Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = betOdd.toString(),
+                            onValueChange = { betOdd = it.toIntOrNull() ?: 0 },
+                            label = { Text("Bet on Odd", fontSize = 12.sp) },
+                            colors = textColors,
+                            modifier = fieldModifier
+                        )
+                        OutlinedTextField(
+                            value = betEven.toString(),
+                            onValueChange = { betEven = it.toIntOrNull() ?: 0 },
+                            label = { Text("Bet on Even", fontSize = 12.sp) },
+                            colors = textColors,
+                            modifier = fieldModifier
+                        )
+                        OutlinedTextField(
+                            value = betLow.toString(),
+                            onValueChange = { betLow = it.toIntOrNull() ?: 0 },
+                            label = { Text("Bet on 1 to 18", fontSize = 12.sp) },
+                            colors = textColors,
+                            modifier = fieldModifier
+                        )
+                        OutlinedTextField(
+                            value = betHigh.toString(),
+                            onValueChange = { betHigh = it.toIntOrNull() ?: 0 },
+                            label = { Text("Bet on 19 to 36", fontSize = 12.sp) },
+                            colors = textColors,
+                            modifier = fieldModifier
+                        )
+                    }
+                }
             }
         }
     }
@@ -564,8 +581,8 @@ fun Bet(bet: Double, viewModel: DoughbagViewModel): Boolean {
     var balance:Double? = 0.0
     if(user != null) {
         balance = user.balance
-        if(bet <= balance && bet >= 10) {
-            viewModel.updateBalance(user.user_ID, (user.balance - (bet * 1.0)))
+        if(bet in 10.0..balance) {
+            viewModel.updateBalance(user.user_ID, ( -1.0 * bet))
             return true
         }
     }
