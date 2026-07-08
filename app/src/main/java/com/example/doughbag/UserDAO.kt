@@ -19,10 +19,10 @@ interface UserDao {
     suspend fun updateUser(user: User)
 
     @Query("SELECT * FROM users")
-    suspend fun getAllUsers(): Flow<List<User>> // flow updates if database changes
+    fun getAllUsers(): Flow<List<User>> // flow updates if database changes
 
     @Query("Select balance from users where user_ID = :user_ID")
-    suspend fun getBalance(user_ID: Int): Flow<Double>
+    fun getBalance(user_ID: Int): Flow<Double>
 
     @Query("select balance from users where user_ID = :user_ID")
     suspend fun getBalanceSync(user_ID: Int): Double
