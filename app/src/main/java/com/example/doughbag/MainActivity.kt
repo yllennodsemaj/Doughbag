@@ -477,7 +477,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 val fieldModifier = Modifier
-                    .height(54.dp)
+                    .height(70.dp)
                     .fillMaxWidth()
 
                 val textColors = TextFieldDefaults.colors(
@@ -487,13 +487,20 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                     unfocusedTextColor = Color.Black
                 )
 
+                val textColors2 = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Gray,
+                    unfocusedContainerColor = Color.Gray,
+                    focusedTextColor = Color.Red,
+                    unfocusedTextColor = Color.Red
+                )
+
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column(modifier = Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = myNumber.toString(),
                             onValueChange = { myNumber = it.toIntOrNull() ?: 0 },
                             label = { Text("My Number", fontSize = 12.sp) },
-                            colors = textColors,
+                            colors = textColors2,
                             modifier = fieldModifier
                         )
                         OutlinedTextField(
@@ -518,7 +525,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             modifier = fieldModifier
                         )
                     }
-
+                    Spacer(modifier = Modifier.width(4.dp))
                     Column(modifier = Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = betOdd.toString(),
