@@ -226,7 +226,7 @@ fun ChooseUser(navController: NavController, viewModel: DoughbagViewModel) {
                 },
                 modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)
             ) {
-                Text("${user.user_name} - $${user.balance}")
+                Text("${user.user_name}  $${user.balance}")
             }
         }
 
