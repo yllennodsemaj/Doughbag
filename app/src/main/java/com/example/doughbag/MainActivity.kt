@@ -226,7 +226,7 @@ fun ChooseUser(navController: NavController, viewModel: DoughbagViewModel) {
                 },
                 modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)
             ) {
-                Text("${user.user_name} - $${user.balance}")
+                Text("${user.user_name}  $${user.balance}")
             }
         }
 
@@ -565,7 +565,7 @@ fun Bet(bet: Double, viewModel: DoughbagViewModel): Boolean {
     if(user != null) {
         balance = user.balance
         if(bet <= balance && bet >= 10) {
-            viewModel.updateBalance(user.user_ID, ( -1.0 * bet))
+            viewModel.updateBalance(user.user_ID, (user.balance - (bet * 1.0)))
             return true
         }
     }
