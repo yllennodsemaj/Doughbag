@@ -17,7 +17,7 @@ class SkinViewModel(private val skinDao: SkinDao) : ViewModel() {
         Skin.SlotSkin(2, "Default Slots", 0, R.drawable.spade,
             R.drawable.clover,
             R.drawable.heart, R.drawable.diamond, R.drawable.jackpot, R.drawable.seven),
-        Skin.DiceSkin(skinID = 4, skinName = "White Dice", skinPrice = 1000,
+        Skin.DiceSkin(skinID = 3, skinName = "White Dice", skinPrice = 1000,
             dice1 = R.drawable.white_dice_1, dice2 = R.drawable.white_dice_2,
             dice3 = R.drawable.white_dice_3, dice4 = R.drawable.white_dice_4,
             dice5 = R.drawable.white_dice_5, dice6 = R.drawable.white_dice_6)

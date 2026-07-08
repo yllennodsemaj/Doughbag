@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +52,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -99,7 +101,7 @@ fun DoughbagNavigation() {
         composable("createUser") { CreateUser(navController, userViewModel) }
         composable("deleteUser") { DeleteUser(navController, userViewModel) }
         composable("play") { Play(navController) }
-        composable("roulette") { Roulette(navController) }
+        composable("roulette") { Roulette(navController, userViewModel) }
         composable("craps") { Craps(navController, userViewModel) }
         composable("slots") { Slots(navController, userViewModel) }
         composable("shop") { Shop(navController,userViewModel, skinViewModel) }
@@ -333,10 +335,14 @@ fun Play(navController: NavController) {
         }
     }
 }
-
+class Pocket(id: Int, color: String)
+{
+    val myId = id
+    val myColor = color
+}
 
 @Composable
-fun Roulette(navController: NavController){
+fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
     ForceLandscapeOrientation()
     val view = LocalView.current
     DisposableEffect(key1 = view) {
@@ -356,10 +362,186 @@ fun Roulette(navController: NavController){
             }
         }
     }
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center) {
-        Button(onClick = { navController.navigate("play") }) { Text("Exit game") }
-        Button(onClick = { println("You spun the roulette wheel") }) { Text("Spin Wheel") }
+    val context = LocalContext.current
+    var balance by remember {
+        mutableStateOf(viewModel.activeUser?.balance ?: 0.0)
+    }
+    var myNumber by remember { mutableStateOf(0) }
+    var betNumber by remember { mutableStateOf(0) }
+    var betRed by remember { mutableStateOf(0) }
+    var betBlack by remember { mutableStateOf(0) }
+    var betOdd by remember { mutableStateOf(0) }
+    var betEven by remember { mutableStateOf(0) }
+    var betHigh by remember { mutableStateOf(0) }
+    var betLow by remember { mutableStateOf(0) }
+    val wheelNumbers = listOf(0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26)
+    val wheel = mutableListOf<Pocket>(Pocket(0, "Green"))
+
+    for(i in 1..wheelNumbers.size step 2)
+    {
+        wheel += Pocket(i, "Red")
+        wheel += Pocket(i + 1, "Black")
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(12.dp) // Gives safe margins on all edges of the screen
+    ) {
+        // 1. TOP LEFT: Balance Indicator
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Balance: ",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.width(4.dp)) // Changed from height to width for horizontal alignment
+                Text(
+                    text = "$balance $",
+                    color = Color(0xFF2E7D32),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Button(
+            onClick = { navController.navigate("play") },
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            Text("Exit game")
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 50.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Column(
+                modifier = Modifier.weight(1.1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.roulette),
+                    contentDescription = "wheel",
+                    modifier = Modifier.size(200.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(onClick = {
+                    val myBet = betNumber + betRed + betBlack + betHigh + betLow + betOdd + betEven * 1.0
+                    if (!Bet(myBet, viewModel) || betNumber < 0 || betNumber > 36) {
+                        Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    val user: User? = viewModel.activeUser
+                    if (user != null) {
+                        balance = balance.minus(myBet)
+                    }
+
+                    val winningPocket = wheel[CasinoRng.nextInt(0, wheel.size)]
+
+                    if (winningPocket.myId == myNumber) { balance += betNumber * 36 }
+                    if (winningPocket.myColor == "Red") { balance += betRed * 2 }
+                    if (winningPocket.myColor == "Black") { balance += betBlack * 2 }
+                    if (winningPocket.myId % 2 == 1) { balance += betOdd * 2 }
+                    if (winningPocket.myId % 2 == 0) { balance += betEven * 2 }
+                    if (winningPocket.myId in 1..18) { balance += betLow * 2 }
+                    if (winningPocket.myId in 19..36) { balance += betHigh * 2 }
+                }) {
+                    Text(text = stringResource(R.string.spinBtnTxt))
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(0.9f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val fieldModifier = Modifier
+                    .height(54.dp)
+                    .fillMaxWidth()
+
+                val textColors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+
+                OutlinedTextField(
+                    value = myNumber.toString(),
+                    onValueChange = { myNumber = it.toIntOrNull() ?: 0 },
+                    label = { Text("My Number", fontSize = 12.sp) },
+                    colors = textColors,
+                    modifier = fieldModifier
+                )
+                OutlinedTextField(
+                    value = betNumber.toString(),
+                    onValueChange = { betNumber = it.toIntOrNull() ?: 0 },
+                    label = { Text("Bet on Number", fontSize = 12.sp) },
+                    colors = textColors,
+                    modifier = fieldModifier
+                )
+                OutlinedTextField(
+                    value = betRed.toString(),
+                    onValueChange = { betRed = it.toIntOrNull() ?: 0 },
+                    label = { Text("Bet on Red", fontSize = 12.sp) },
+                    colors = textColors,
+                    modifier = fieldModifier
+                )
+                OutlinedTextField(
+                    value = betBlack.toString(),
+                    onValueChange = { betBlack = it.toIntOrNull() ?: 0 },
+                    label = { Text("Bet on Black", fontSize = 12.sp) },
+                    colors = textColors,
+                    modifier = fieldModifier
+                )
+                OutlinedTextField(
+                    value = betOdd.toString(),
+                    onValueChange = { betOdd = it.toIntOrNull() ?: 0 },
+                    label = { Text("Bet on Odd", fontSize = 12.sp) },
+                    colors = textColors,
+                    modifier = fieldModifier
+                )
+                OutlinedTextField(
+                    value = betEven.toString(),
+                    onValueChange = { betEven = it.toIntOrNull() ?: 0 },
+                    label = { Text("Bet on Even", fontSize = 12.sp) },
+                    colors = textColors,
+                    modifier = fieldModifier
+                )
+                OutlinedTextField(
+                    value = betLow.toString(),
+                    onValueChange = { betLow = it.toIntOrNull() ?: 0 },
+                    label = { Text("Bet on 1 to 18", fontSize = 12.sp) },
+                    colors = textColors,
+                    modifier = fieldModifier
+                )
+                OutlinedTextField(
+                    value = betHigh.toString(),
+                    onValueChange = { betHigh = it.toIntOrNull() ?: 0 },
+                    label = { Text("Bet on 19 to 36", fontSize = 12.sp) },
+                    colors = textColors,
+                    modifier = fieldModifier
+                )
+            }
+        }
     }
 }
 
