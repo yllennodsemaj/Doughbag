@@ -46,12 +46,6 @@ class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinD
         }
         activeUser = null
     }
-    fun updateActiveUser(updatedUser: User) {
-        viewModelScope.launch {
-            userDao.updateUser(updatedUser)
-            activeUser = updatedUser
-        }
-    }
 
     fun updateBalance(user_ID: Int, newBalance: Double) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -68,7 +62,8 @@ class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinD
         winnings: Double = 0.0, lossAmt: Double = 0.0
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            userDao.updateStats(userId, wins, losses, rWins, rLosses, cWins, cLosses, sWins, sLosses, winnings, lossAmt)
+            userDao.updateStats(userId, wins, losses, rWins, rLosses,
+                cWins, cLosses, sWins, sLosses, winnings, lossAmt)
         }
     }
 
