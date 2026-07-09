@@ -43,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
@@ -53,6 +52,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -641,122 +641,141 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
 
     var myBet by remember { mutableStateOf(10.0) }
     var winStatusText by remember { mutableStateOf("") }
-
     Box(
         modifier = Modifier
-            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
-            .padding(10.dp),
-        contentAlignment = Alignment.Center
+            .fillMaxSize()
+            .padding(12.dp) // Gives safe margins on all edges of the screen
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "  Balance: ",
-                color = Color.Gray,
-                fontSize = 15.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "$balance $",
-                color = Color(0xFF2E7D32),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
+                .padding(10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "  Balance: ",
+                    color = Color.Gray,
+                    fontSize = 15.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                text = "$$balance",
+                    color = Color(0xFF2E7D32),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
         }
-    }
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = winStatusText,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF4CAF50),
-            modifier = Modifier.height(30.dp)
-        )
-        OutlinedTextField(
-            value = myBet.toString(),
-            onValueChange = { myBet = it.toDoubleOrNull() ?: 0.0 },
-            label = { Text("Bet") },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
-            ),
-            modifier = Modifier.padding(5.dp),
-            // force number pad
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done // bottom right key = done
-            ),
-            // collapse keyboard on done click
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    keyboardController?.hide()
-                }
+        Button(
+                onClick = { navController.navigate("play") },
+        modifier = Modifier.align(Alignment.TopEnd)
+        ) { Text("Exit game") }
+        Column(
+            modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = winStatusText,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4CAF50),
+                modifier = Modifier.height(30.dp)
             )
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
-        {
-            Image(
-                painter = painterResource(slot1.myRes),
-                contentDescription = "slot 1",
-                modifier = Modifier.size(100.dp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Image(
-                painter = painterResource(slot2.myRes),
-                contentDescription = "slot 2",
-                modifier = Modifier.size(100.dp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Image(
-                painter = painterResource(slot3.myRes),
-                contentDescription = "slot 3",
-                modifier = Modifier.size(100.dp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Button(onClick = {
-                winStatusText = ""
-                if(!Bet(myBet, viewModel))
-                {
-                    Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
-                    return@Button
-                }
-
-                if(user != null) {
-                    // update balance text to subtract current bet
-                    balance = balance.minus(myBet)
-                    viewModel.updateBalance(user.user_ID, balance)
-                    slot1 = slots[CasinoRng.nextInt(0, slots.size)]
-                    slot2 = slots[CasinoRng.nextInt(0, slots.size)]
-                    slot3 = slots[CasinoRng.nextInt(0, slots.size)]
-
-                    if(slot1.myId == slot2.myId && slot2.myId == slot3.myId)
-                    {
-                        // update db balance and win stats
-                        val win: Double = (myBet * slot1.myId).toDouble()
-                        balance += win
-                        viewModel.updateBalance(user.user_ID, balance)
-                        viewModel.updateStats(userId = user.user_ID, wins = 1, sWins = 1, winnings = win)
-                        winStatusText = "You won: $win!"
-
+            OutlinedTextField(
+                value = myBet.toString(),
+                onValueChange = { myBet = it.toDoubleOrNull() ?: 0.0 },
+                label = { Text("Bet") },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
+                modifier = Modifier.padding(5.dp),
+                // force number pad
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done // bottom right key = done
+                ),
+                // collapse keyboard on done click
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
                     }
-                    else { // update db loss stats
-                        viewModel.updateStats(userId = user.user_ID, lossAmt = myBet, sLosses = 1)
-                        }
-                }
+                )
+            )
 
-            })
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
             {
-                Text(text = stringResource(R.string.spinBtnTxt))
+                Image(
+                    painter = painterResource(slot1.myRes),
+                    contentDescription = "slot 1",
+                    modifier = Modifier.size(100.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Image(
+                    painter = painterResource(slot2.myRes),
+                    contentDescription = "slot 2",
+                    modifier = Modifier.size(100.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Image(
+                    painter = painterResource(slot3.myRes),
+                    contentDescription = "slot 3",
+                    modifier = Modifier.size(100.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Button(onClick = {
+                    winStatusText = ""
+                    if (!Bet(myBet, viewModel)) {
+                        Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    if (user != null) {
+                        // update balance text to subtract current bet
+                        balance = balance.minus(myBet)
+                        viewModel.updateBalance(user.user_ID, balance)
+                        slot1 = slots[CasinoRng.nextInt(0, slots.size)]
+                        slot2 = slots[CasinoRng.nextInt(0, slots.size)]
+                        slot3 = slots[CasinoRng.nextInt(0, slots.size)]
+
+                        if (slot1.myId == slot2.myId && slot2.myId == slot3.myId) {
+                            // update db balance and win stats
+                            val win: Double = (myBet * slot1.myId)
+                            balance += win
+                            viewModel.updateBalance(user.user_ID, balance)
+                            viewModel.updateStats(
+                                userId = user.user_ID,
+                                wins = 1,
+                                sWins = 1,
+                                winnings = win
+                            )
+                            winStatusText = "You won: $win!"
+
+                        } else { // update db loss stats
+                            viewModel.updateStats(
+                                userId = user.user_ID,
+                                lossAmt = myBet,
+                                sLosses = 1,
+                                losses = 1
+                            )
+                        }
+                    }
+
+                })
+                {
+                    Text(text = stringResource(R.string.spinBtnTxt))
+                }
             }
         }
-        Spacer(modifier = Modifier.height(30.dp))
-        Button(onClick = { navController.navigate("play") }) { Text("Exit game") }
     }
 
 
@@ -817,30 +836,39 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
 
     var myBet by remember { mutableStateOf(10.0) }
     var winStatusText by remember { mutableStateOf("7 or 11 wins on first roll!") }
-
     Box(
         modifier = Modifier
-            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
-            .padding(10.dp),
-        contentAlignment = Alignment.Center
+            .fillMaxSize()
+            .padding(12.dp) // Gives safe margins on all edges of the screen
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "  Balance: ",
-                color = Color.Gray,
-                fontSize = 15.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "$balance $",
-                color = Color(0xFF2E7D32),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+        Box(
+            modifier = Modifier
+                .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
+                .padding(10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "  Balance: ",
+                    color = Color.Gray,
+                    fontSize = 15.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "$balance $",
+                    color = Color(0xFF2E7D32),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
+        Button(
+            onClick = { navController.navigate("play") },
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) { Text("Exit game") }
     }
 
-    Column(
+        Column(
         modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -905,7 +933,8 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                 val sum = diceResult1 + diceResult2
                 if (isFirstClick) {
                     if (!Bet(myBet, viewModel)) {
-                        Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Can't bet this",
+                            Toast.LENGTH_SHORT).show()
                         return@Button
                     }
                     balance = balance.minus(myBet)
@@ -915,13 +944,15 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                             val win: Double = myBet * 2.0
                             balance += win
                             viewModel.updateBalance(user.user_ID, balance)
-                            viewModel.updateStats(userId = user.user_ID, wins = 1, winnings = win, cWins = 1)
+                            viewModel.updateStats(userId = user.user_ID, wins = 1, winnings = win,
+                                cWins = 1)
                             winStatusText = "You won: $win! Play again?"
                             isFirstClick = true
                         }
                         2, 3, 12 -> {
                             winStatusText = "Craps! Play again?"
-                            viewModel.updateStats(userId = user.user_ID, losses = 1, lossAmt = myBet, cLosses = 1)
+                            viewModel.updateStats(userId = user.user_ID, losses = 1, lossAmt = myBet,
+                                cLosses = 1)
                             isFirstClick = true
                         }
                         else -> {
@@ -936,14 +967,16 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                             val win: Double = myBet * 2.0
                             balance += win
                             viewModel.updateBalance(user.user_ID, balance)
-                            viewModel.updateStats(userId = user.user_ID, wins = 1, winnings = win, cWins = 1)
+                            viewModel.updateStats(userId = user.user_ID, wins = 1,
+                                winnings = win, cWins = 1)
                             winStatusText = "You won $win! Play again?"
                             isFirstClick = true
                         }
 
                         7 -> {
                             winStatusText = "7 loses. Play again?"
-                            viewModel.updateStats(userId = user.user_ID, losses = 1, lossAmt = myBet)
+                            viewModel.updateStats(userId = user.user_ID, losses = 1, cLosses = 1,
+                                lossAmt = myBet)
                             isFirstClick = true
                         }
 
@@ -957,35 +990,31 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
             }
         }
     }
-
-    Spacer(modifier = Modifier.size(30.dp))
-    Button(onClick = { navController.navigate("play") }) {
-        Text("Exit game")
-    }
 }
 
 
 @Composable
 fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
     ForcePortraitOrientation()
-    val getUser = viewModel.activeUser
+    val allUsers by viewModel.userList.collectAsState() // collect as state pulls most up to date db info
+    val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID } // pick active user from user list
     Column(
         modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (getUser != null) {
-            Text("User statistics for: ${getUser.user_name}")
+        if (user != null) {
+            Text("User statistics for: ${user.user_name}")
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Total Wins: ${getUser.total_wins}")
-            Text("Slot Wins: ${getUser.sWins}")
-            Text("Craps Wins: ${getUser.cWins}")
-            Text("Roulette Wins: ${getUser.rWins}")
-            Text("Total Losses: ${getUser.total_losses}")
-            Text("Slot Losses: ${getUser.sLosses}")
-            Text("Craps Losses: ${getUser.cLosses}")
-            Text("Roulette Losses: ${getUser.rLosses}")
-            Text("Total winnings: \$${getUser.winnings}")
-            Text("Total losses: \$${getUser.losses}")
+            Text("Total Wins: ${user.total_wins}")
+            Text("Total Losses: ${user.total_losses}")
+            Text("Slot Wins: ${user.sWins}")
+            Text("Slot Losses: ${user.sLosses}")
+            Text("Craps Wins: ${user.cWins}")
+            Text("Craps Losses: ${user.cLosses}")
+            Text("Roulette Wins: ${user.rWins}")
+            Text("Roulette Losses: ${user.rLosses}")
+            Text("Total winnings: \$${user.winnings}")
+            Text("Total losses: \$${user.losses}")
         } else {
             Text("No active user!")
         }
@@ -1014,7 +1043,6 @@ fun Shop(
         LazyColumn {
             items(shopSkins) { skin ->
                 Button(onClick = {
-                    // Trigger the transaction we talked about earlier!
                     println("Triggering purchase logic for ${skin.skinName}")
                 }) {
                     Text("Buy ${skin.skinName} for $${skin.skinPrice}")
