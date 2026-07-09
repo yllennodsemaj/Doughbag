@@ -1,7 +1,11 @@
 package com.example.doughbag
 
+import android.R.attr.orientation
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -52,10 +56,13 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ListItemDefaults.contentColor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,36 +116,31 @@ fun DoughbagNavigation() {
         composable("stats") { Statistics(navController, userViewModel) }
     }
 }
-@Composable
-fun ForceLandscapeOrientation() {
-    val context = LocalContext.current
-
-    DisposableEffect(Unit) {
-        val activity = context as? Activity
-        val originalOrientation = activity?.requestedOrientation
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        onDispose {
-            activity?.requestedOrientation = originalOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        }
+// helper function for screen orientation
+fun Context.findActivity(): Activity? {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is Activity) return currentContext
+        currentContext = currentContext.baseContext
     }
+    return null
 }
 @Composable
-fun ForcePortraitOrientation() {
+fun SetScreenOrientation(orientation: Int) {
     val context = LocalContext.current
+    DisposableEffect(orientation) {
+        val activity = context.findActivity()
+        activity?.requestedOrientation = orientation
 
-    DisposableEffect(Unit) {
-        val activity = context as? Activity
-        val originalOrientation = activity?.requestedOrientation
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         onDispose {
-            activity?.requestedOrientation = originalOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            // do nothing, let next screen choose its own orientation
         }
     }
 }
 
 @Composable //home page; viewed on load
 fun HomeScreen(navController: NavController) {
-    ForcePortraitOrientation()
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -154,7 +156,7 @@ fun HomeScreen(navController: NavController) {
 
 @Composable // create user page to create a new user
 fun CreateUser(navController: NavController, viewModel: DoughbagViewModel) {
-    ForcePortraitOrientation()
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     var userNameInput by remember { mutableStateOf("") }
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -188,25 +190,40 @@ fun CreateUser(navController: NavController, viewModel: DoughbagViewModel) {
 
 @Composable
 fun DeleteUser(navController: NavController, viewModel: DoughbagViewModel){
-    ForcePortraitOrientation()
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center) {
-        Button(onClick = {
-            val getUser = viewModel.activeUser
-            if (getUser != null) {
-                viewModel.deleteUser(getUser) // delete the active user
-                navController.navigate("chooseUser")
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+
+        Column(
+            modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            val user = viewModel.activeUser
+            if(user != null) {
+                Text("Delete ${user.user_name}?")
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(onClick = {
+                        viewModel.deleteUser(user) // delete the active user
+                        navController.navigate("chooseUser")
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFD32F2F),
+                        contentColor = Color.White)
+                ) {
+                    Text("Delete")
+                }
             }
-        }) {
-            Text("Delete")
+
+            else {
+                Text("No active user!")
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(onClick = { navController.navigate("chooseUser") }) { Text("Cancel") }
         }
-        Button(onClick = { navController.navigate("chooseUser") }) { Text("Cancel") }
-    }
 }
+
 
 @Composable // page with users listed and option to create a new user
 fun ChooseUser(navController: NavController, viewModel: DoughbagViewModel) {
-    ForcePortraitOrientation()
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     // listens for new users
     val userList by viewModel.userList.collectAsState()
 
@@ -245,7 +262,7 @@ fun ChooseUser(navController: NavController, viewModel: DoughbagViewModel) {
 
 @Composable // after choosing a user, select a game to play, or shop, inventory, or go back home
 fun Play(navController: NavController) {
-    ForceLandscapeOrientation()
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -343,8 +360,8 @@ class Pocket(id: Int, color: String)
 
 @Composable
 fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
-    ForceLandscapeOrientation()
     val view = LocalView.current
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     DisposableEffect(key1 = view) {
         val window = (view.context as? android.app.Activity)?.window
         if (window != null) {
@@ -358,23 +375,27 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
             // Restore bars when leaving this specific game view screen
             if (window != null) {
                 val controller = WindowCompat.getInsetsController(window, view)
-                controller.show(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+                controller.show(WindowInsetsCompat.Type.statusBars() or
+                        WindowInsetsCompat.Type.navigationBars())
             }
         }
     }
     val context = LocalContext.current
-    var balance by remember {
-        mutableStateOf(viewModel.activeUser?.balance ?: 0.0)
-    }
-    var myNumber by remember { mutableStateOf(0) }
-    var betNumber by remember { mutableStateOf(0) }
-    var betRed by remember { mutableStateOf(0) }
-    var betBlack by remember { mutableStateOf(0) }
-    var betOdd by remember { mutableStateOf(0) }
-    var betEven by remember { mutableStateOf(0) }
-    var betHigh by remember { mutableStateOf(0) }
-    var betLow by remember { mutableStateOf(0) }
-    val wheelNumbers = listOf(0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26)
+    val allUsers by viewModel.userList.collectAsState()
+    val liveUser = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
+    var thisGameBalance = liveUser?.balance ?: 0.0 // best way to get live db balance
+    var myNumber by remember { mutableStateOf("") } //  Changed to String
+    var betNumber by remember { mutableStateOf("") } // to solve stuttering
+    var betRed by remember { mutableStateOf("") } //    issues during input
+    var betBlack by remember { mutableStateOf("") }
+    var betOdd by remember { mutableStateOf("") }
+    var betEven by remember { mutableStateOf("") }
+    var betHigh by remember { mutableStateOf("") }
+    var betLow by remember { mutableStateOf("") }
+    var spinResult by remember { mutableStateOf("")}
+    var winStatusText by remember { mutableStateOf("")}
+    val wheelNumbers = listOf(0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8,
+        23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26)
     val wheel = mutableListOf<Pocket>(Pocket(0, "Green"))
 
     for(i in 1..wheelNumbers.size step 2)
@@ -388,7 +409,6 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
             .fillMaxSize()
             .padding(12.dp) // Gives safe margins on all edges of the screen
     ) {
-        // 1. TOP LEFT: Balance Indicator
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -404,7 +424,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 )
                 Spacer(modifier = Modifier.width(4.dp)) // Changed from height to width for horizontal alignment
                 Text(
-                    text = "$balance $",
+                    text = "$$thisGameBalance",
                     color = Color(0xFF2E7D32),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
@@ -431,6 +451,8 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                Text("$spinResult")
+                Text("$winStatusText")
                 Image(
                     painter = painterResource(R.drawable.roulette),
                     contentDescription = "wheel",
@@ -440,29 +462,129 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Button(onClick = {
-                    val myBet = (betNumber + betRed + betBlack + betHigh + betLow + betOdd + betEven) * 1.0
-                    if (!Bet(myBet, viewModel) || myNumber < 0 || myNumber > 36) {
-                        Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
+                    // type checks all user inputs and converts strings to number or null
+                    val numTarget = myNumber.toIntOrNull() ?: 0
+                    val bet = betNumber.toDoubleOrNull() ?: 0.0
+                    val redBet = betRed.toDoubleOrNull() ?: 0.0
+                    val blackBet = betBlack.toDoubleOrNull() ?: 0.0
+                    val oddBet = betOdd.toDoubleOrNull() ?: 0.0
+                    val evenBet = betEven.toDoubleOrNull() ?: 0.0
+                    val highBet = betHigh.toDoubleOrNull() ?: 0.0
+                    val lowBet = betLow.toDoubleOrNull() ?: 0.0
+                    val myBet = (bet + redBet + blackBet + highBet + lowBet + oddBet + evenBet) * 1.0
+                    spinResult = "Spin to win"
+                    winStatusText = ""
+                    // bet too low
+                    if (myBet < 10.0) {
+                        Toast.makeText(context, "Minimum bet is $10!",
+                            Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-
-                    val user: User? = viewModel.activeUser
-                    if (user != null) {
-                        balance = balance.minus(myBet)
+                    // bet more than balance
+                    if (!bet(myBet, viewModel)) {
+                        Toast.makeText(context, "Insufficient funds!",
+                            Toast.LENGTH_SHORT).show()
+                        return@Button
                     }
-
+                    // if there's a number bet and num not between 1 and 36 cant bet
+                    if ( bet > 0 && numTarget !in -1..36 ) {
+                        Toast.makeText(context, "Invalid roulette number!", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    thisGameBalance -= myBet
+                        // first subtract total bets from balance
                     val winningPocket = wheel[CasinoRng.nextInt(0, wheel.size)]
+                    spinResult = "The ball landed on: ${winningPocket.myId} ${winningPocket.myColor}"
+                        // get winning result
+                    if(liveUser != null) {
+                        val user = liveUser
+                        var win = 0.0
 
-                    if (winningPocket.myId == myNumber) { balance += betNumber * 36 }
-                    if (winningPocket.myColor == "Red") { balance += betRed * 2 }
-                    if (winningPocket.myColor == "Black") { balance += betBlack * 2 }
+                    if (winningPocket.myId == numTarget) { //
+                        win += bet * 36
+                        viewModel.updateStats(user.user_ID, wins = 1, rWins = 1,
+                            winnings = bet * 36)}
+                    else if(bet > 0){
+                        viewModel.updateStats(user.user_ID, losses = 1, rLosses = 1,
+                            lossAmt = bet)
+                    }
+                    if (winningPocket.myColor == "Red") {
+                        win += redBet * 2
+                        viewModel.updateStats(user.user_ID, wins = 1, rWins = 1,
+                            winnings = redBet * 2)}
+                    else if(redBet > 0){
+                        viewModel.updateStats(user.user_ID, losses = 1, rLosses = 1,
+                            lossAmt = redBet)
+                    }
+                    if (winningPocket.myColor == "Black") {
+                        win += blackBet * 2
+                        viewModel.updateStats(user.user_ID, wins = 1, rWins = 1,
+                            winnings = blackBet * 2)}
+                    else if(blackBet > 0){
+                        viewModel.updateStats(user.user_ID, losses = 1, rLosses = 1,
+                            lossAmt = blackBet)
+                    }
                     // Zero is not even, odd, high, or low in roulette
                     if (winningPocket.myId != 0) {
-                        if (winningPocket.myId % 2 == 1) { balance += betOdd * 2 }
-                        if (winningPocket.myId % 2 == 0) { balance += betEven * 2 }
-                        if (winningPocket.myId in 1..18) { balance += betLow * 2 }
-                        if (winningPocket.myId in 19..36) { balance += betHigh * 2 }
+                        if (winningPocket.myId % 2 == 1) {
+                            win += oddBet * 2
+                            viewModel.updateStats(
+                                user.user_ID, wins = 1, rWins = 1,
+                                winnings = oddBet * 2
+                            )
+                        } else if(oddBet > 0){
+                            viewModel.updateStats(
+                                user.user_ID, losses = 1, rLosses = 1,
+                                lossAmt = oddBet
+                            )
+                        }
+                        if (winningPocket.myId % 2 == 0) {
+                            win += evenBet * 2
+                            viewModel.updateStats(
+                                user.user_ID, wins = 1, rWins = 1,
+                                winnings = evenBet * 2
+                            )
+                        } else if(evenBet > 0){
+                            viewModel.updateStats(
+                                user.user_ID, losses = 1, rLosses = 1,
+                                lossAmt = evenBet
+                            )
+                        }
+                        if (winningPocket.myId in 1..18) {
+                            win += lowBet * 2
+                            viewModel.updateStats(
+                                user.user_ID, wins = 1, rWins = 1,
+                                winnings = lowBet * 2
+                            )
+                        } else if(lowBet > 0){
+                            viewModel.updateStats(
+                                user.user_ID, losses = 1, rLosses = 1,
+                                lossAmt = lowBet
+                            )
+                        }
+                        if (winningPocket.myId in 19..36) {
+                            win += highBet * 2
+                            viewModel.updateStats(
+                                user.user_ID, wins = 1, rWins = 1,
+                                winnings = highBet * 2
+                            )
+                        } else if(highBet > 0){
+                            viewModel.updateStats(
+                                user.user_ID, losses = 1, rLosses = 1,
+                                lossAmt = highBet
+                            )
+                        }
+                        if(win > 0) {
+                            winStatusText = "You won $$win!"
+                        }
+                        else{
+                            winStatusText = "You lost."
+                        }
+                        thisGameBalance += win
+                        viewModel.updateBalance(user.user_ID, thisGameBalance)
                     }
+                    }
+
                 }) {
                     Text(text = stringResource(R.string.spinBtnTxt))
                 }
@@ -497,63 +619,71 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column(modifier = Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
-                            value = myNumber.toString(),
-                            onValueChange = { myNumber = it.toIntOrNull() ?: 0 },
+                            value = myNumber,
+                            onValueChange = { myNumber = it },
                             label = { Text("My Number", fontSize = 12.sp) },
                             colors = textColors2,
-                            modifier = fieldModifier
+                            modifier = fieldModifier,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                         OutlinedTextField(
-                            value = betNumber.toString(),
-                            onValueChange = { betNumber = it.toIntOrNull() ?: 0 },
+                            value = betNumber,
+                            onValueChange = { betNumber = it },
                             label = { Text("Bet on Number", fontSize = 12.sp) },
                             colors = textColors,
-                            modifier = fieldModifier
+                            modifier = fieldModifier,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                         OutlinedTextField(
-                            value = betRed.toString(),
-                            onValueChange = { betRed = it.toIntOrNull() ?: 0 },
+                            value = betRed,
+                            onValueChange = { betRed = it },
                             label = { Text("Bet on Red", fontSize = 12.sp) },
                             colors = textColors,
-                            modifier = fieldModifier
+                            modifier = fieldModifier,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                         OutlinedTextField(
-                            value = betBlack.toString(),
-                            onValueChange = { betBlack = it.toIntOrNull() ?: 0 },
+                            value = betBlack,
+                            onValueChange = { betBlack = it },
                             label = { Text("Bet on Black", fontSize = 12.sp) },
                             colors = textColors,
-                            modifier = fieldModifier
+                            modifier = fieldModifier,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Column(modifier = Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
-                            value = betOdd.toString(),
-                            onValueChange = { betOdd = it.toIntOrNull() ?: 0 },
+                            value = betOdd,
+                            onValueChange = { betOdd = it },
                             label = { Text("Bet on Odd", fontSize = 12.sp) },
                             colors = textColors,
-                            modifier = fieldModifier
+                            modifier = fieldModifier,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                         OutlinedTextField(
-                            value = betEven.toString(),
-                            onValueChange = { betEven = it.toIntOrNull() ?: 0 },
+                            value = betEven,
+                            onValueChange = { betEven = it },
                             label = { Text("Bet on Even", fontSize = 12.sp) },
                             colors = textColors,
-                            modifier = fieldModifier
+                            modifier = fieldModifier,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                         OutlinedTextField(
-                            value = betLow.toString(),
-                            onValueChange = { betLow = it.toIntOrNull() ?: 0 },
+                            value = betLow,
+                            onValueChange = { betLow = it },
                             label = { Text("Bet on 1 to 18", fontSize = 12.sp) },
                             colors = textColors,
-                            modifier = fieldModifier
+                            modifier = fieldModifier,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                         OutlinedTextField(
-                            value = betHigh.toString(),
-                            onValueChange = { betHigh = it.toIntOrNull() ?: 0 },
+                            value = betHigh,
+                            onValueChange = { betHigh = it },
                             label = { Text("Bet on 19 to 36", fontSize = 12.sp) },
                             colors = textColors,
-                            modifier = fieldModifier
+                            modifier = fieldModifier,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                     }
                 }
@@ -576,29 +706,27 @@ class SlotCard(id: Int, res: Int) {
     val myRes = res
 }
 
-fun Bet(bet: Double, viewModel: DoughbagViewModel): Boolean {
-    val user: User? = viewModel.activeUser
-    var balance:Double? = 0.0
+fun bet(bet: Double, viewModel: DoughbagViewModel): Boolean {
+    val user = viewModel.userList.value.find { it.user_ID == viewModel.activeUser?.user_ID }
+    // pulling from userList forces most up to date balance
     if(user != null) {
-        balance = user.balance
-        if(bet in 10.0..balance) {
-            viewModel.updateBalance(user.user_ID, ( -1.0 * bet))
-            return true
-        }
+        val balance = user.balance
+        return bet in 10.0..balance
     }
     return false
 }
 
 @Composable
 fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
-    ForceLandscapeOrientation() // forces landscape view and hides notifications at top of screen
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     val view = LocalView.current
     val keyboardController = LocalSoftwareKeyboardController.current // need this to force num pad for bets
     DisposableEffect(key1 = view) {
         val window = (view.context as? android.app.Activity)?.window
         if (window != null) {
             val controller = WindowCompat.getInsetsController(window, view)
-            controller.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+            controller.hide(WindowInsetsCompat.Type.statusBars() or
+                    WindowInsetsCompat.Type.navigationBars())
             // Allow user to swipe from edge to bring them back temporarily
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
@@ -612,14 +740,13 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
         }
     }
     val context = LocalContext.current
-    val user = viewModel.activeUser
+    val allUsers by viewModel.userList.collectAsState()
+    val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
+    var balance = user?.balance ?: 0.0
     if(user == null) {
         println("no active user")
         navController.navigate("chooseUser")
     }
-    var balance by remember { mutableStateOf(user?.balance ?: 0.0) }
-    val sWins by viewModel.sWins.collectAsState()
-
     // praise AI
     val hearts = SlotCard(1, R.drawable.heart)
     val diamonds = SlotCard(2, R.drawable.diamond)
@@ -639,7 +766,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
     var slot2 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.heart)) }
     var slot3 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.spade)) }
 
-    var myBet by remember { mutableStateOf(10.0) }
+    var bet by remember { mutableStateOf("10.0") }
     var winStatusText by remember { mutableStateOf("") }
     Box(
         modifier = Modifier
@@ -662,7 +789,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                text = "$$balance",
+                    text = "$$balance",
                     color = Color(0xFF2E7D32),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
@@ -670,9 +797,9 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
             }
 
         }
-        Button(
-                onClick = { navController.navigate("play") },
-        modifier = Modifier.align(Alignment.TopEnd)
+        Button( // back to play screen
+            onClick = { navController.navigate("play") },
+            modifier = Modifier.align(Alignment.TopEnd)
         ) { Text("Exit game") }
         Column(
             modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
@@ -686,9 +813,13 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
                 modifier = Modifier.height(30.dp)
             )
             OutlinedTextField(
-                value = myBet.toString(),
-                onValueChange = { myBet = it.toDoubleOrNull() ?: 0.0 },
+                value = bet,
+                onValueChange = { bet = it },
                 label = { Text("Bet") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal, // Allows decimals like 10.50
+                    imeAction = ImeAction.Done
+                ),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -696,11 +827,6 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
                     unfocusedTextColor = Color.Black
                 ),
                 modifier = Modifier.padding(5.dp),
-                // force number pad
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done // bottom right key = done
-                ),
                 // collapse keyboard on done click
                 keyboardActions = KeyboardActions(
                     onDone = {
@@ -734,15 +860,21 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
 
                 Button(onClick = {
                     winStatusText = ""
-                    if (!Bet(myBet, viewModel)) {
-                        Toast.makeText(context, "Can't bet this", Toast.LENGTH_SHORT).show()
+                    var myBet = bet.toDoubleOrNull()
+                    if(myBet == null) myBet = 0.0
+                    if (myBet < 10.0) {
+                        Toast.makeText(context, "Minimum bet $10",
+                            Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-
+                    if (!bet(myBet, viewModel)) {
+                        Toast.makeText(context, "Insufficient funds",
+                            Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
                     if (user != null) {
                         // update balance text to subtract current bet
-                        balance = balance.minus(myBet)
-                        viewModel.updateBalance(user.user_ID, balance)
+                        var newBalance = balance - myBet
                         slot1 = slots[CasinoRng.nextInt(0, slots.size)]
                         slot2 = slots[CasinoRng.nextInt(0, slots.size)]
                         slot3 = slots[CasinoRng.nextInt(0, slots.size)]
@@ -750,8 +882,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
                         if (slot1.myId == slot2.myId && slot2.myId == slot3.myId) {
                             // update db balance and win stats
                             val win: Double = (myBet * slot1.myId)
-                            balance += win
-                            viewModel.updateBalance(user.user_ID, balance)
+                            newBalance += win // update game balance on win
                             viewModel.updateStats(
                                 userId = user.user_ID,
                                 wins = 1,
@@ -768,6 +899,9 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
                                 losses = 1
                             )
                         }
+                        balance = newBalance
+                        viewModel.updateBalance(user.user_ID, balance)
+                        // update db balance for bet and win ^
                     }
 
                 })
@@ -777,13 +911,11 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
             }
         }
     }
-
-
 }
 
 @Composable
 fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
-    ForceLandscapeOrientation()
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     val view = LocalView.current
     val keyboardController =
         LocalSoftwareKeyboardController.current // need this to force num pad for bets
@@ -806,12 +938,13 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         }
     }
     val context = LocalContext.current
-    val user = viewModel.activeUser
-    if (user == null) {
+    val allUsers by viewModel.userList.collectAsState()
+    val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
+    var balance = user?.balance ?: 0.0
+    if(user == null) {
         println("no active user")
         navController.navigate("chooseUser")
     }
-    var balance by remember { mutableStateOf(user?.balance ?: 0.0) }
 
     var diceResult1 by remember { mutableStateOf(1) }
     var diceResult2 by remember { mutableStateOf(2) }
@@ -834,7 +967,7 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         else -> R.drawable.dice_6
     }
 
-    var myBet by remember { mutableStateOf(10.0) }
+    var bet by remember { mutableStateOf("10.0") }
     var winStatusText by remember { mutableStateOf("7 or 11 wins on first roll!") }
     Box(
         modifier = Modifier
@@ -881,8 +1014,8 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         )
 
         OutlinedTextField(
-            value = myBet.toString(),
-            onValueChange = { myBet = it.toDoubleOrNull() ?: 0.0 },
+            value = bet,
+            onValueChange = { bet = it },
             label = { Text("Bet") },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
@@ -925,63 +1058,89 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
 
             Button(onClick = {
                 if (user == null) return@Button
+                else {
+                    winStatusText = ""
+                    diceResult1 = CasinoRng.nextInt(1, 6)
+                    diceResult2 = CasinoRng.nextInt(1, 6)
+                    val myBet = bet.toDoubleOrNull() ?: 0.0
+                    val sum = diceResult1 + diceResult2
 
-                winStatusText = ""
-                diceResult1 = CasinoRng.nextInt(1, 6)
-                diceResult2 = CasinoRng.nextInt(1, 6)
+                    if (isFirstClick) { // initial roll
+                        if (myBet < 10.0) {
+                            Toast.makeText(context, "Minimum bet $10",
+                                Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        if (myBet > balance) {
+                            Toast.makeText(context, "Insufficient funds",
+                                Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        if (!bet(myBet, viewModel)) {
+                            Toast.makeText(
+                                context, "Can't bet this",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+                        balance -= myBet * 1.0
+                        viewModel.updateBalance(user.user_ID, balance)
+                        when (sum) {
+                            7, 11 -> {
+                                val win: Double = myBet * 2.0
+                                balance += win
+                                viewModel.updateBalance(user.user_ID, balance)
+                                viewModel.updateStats(
+                                    userId = user.user_ID, wins = 1, winnings = win,
+                                    cWins = 1
+                                )
+                                winStatusText = "You won: $win! Play again?"
+                                isFirstClick = true
+                            }
 
-                val sum = diceResult1 + diceResult2
-                if (isFirstClick) {
-                    if (!Bet(myBet, viewModel)) {
-                        Toast.makeText(context, "Can't bet this",
-                            Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    balance = balance.minus(myBet)
+                            2, 3, 12 -> {
+                                winStatusText = "Craps! Play again?"
+                                viewModel.updateStats(
+                                    userId = user.user_ID, losses = 1, lossAmt = myBet,
+                                    cLosses = 1
+                                )
+                                viewModel.updateBalance(user.user_ID, balance)
+                                isFirstClick = true
+                            }
 
-                    when (sum) {
-                        7, 11 -> {
-                            val win: Double = myBet * 2.0
-                            balance += win
-                            viewModel.updateBalance(user.user_ID, balance)
-                            viewModel.updateStats(userId = user.user_ID, wins = 1, winnings = win,
-                                cWins = 1)
-                            winStatusText = "You won: $win! Play again?"
-                            isFirstClick = true
+                            else -> {
+                                pointValue = sum
+                                winStatusText = "$sum wins, 7 loses. Roll again!"
+                                isFirstClick = false
+                            }
                         }
-                        2, 3, 12 -> {
-                            winStatusText = "Craps! Play again?"
-                            viewModel.updateStats(userId = user.user_ID, losses = 1, lossAmt = myBet,
-                                cLosses = 1)
-                            isFirstClick = true
-                        }
-                        else -> {
-                            pointValue = sum
-                            winStatusText = "$sum wins, 7 loses. Roll again!"
-                            isFirstClick = false
-                        }
-                    }
-                } else {
-                    when (sum) {
-                        pointValue -> {
-                            val win: Double = myBet * 2.0
-                            balance += win
-                            viewModel.updateBalance(user.user_ID, balance)
-                            viewModel.updateStats(userId = user.user_ID, wins = 1,
-                                winnings = win, cWins = 1)
-                            winStatusText = "You won $win! Play again?"
-                            isFirstClick = true
-                        }
+                    } else {
+                        when (sum) {
+                            pointValue -> {
+                                val win = myBet * 2.0
+                                balance += win
+                                viewModel.updateBalance(user.user_ID, balance)
+                                viewModel.updateStats(
+                                    userId = user.user_ID, wins = 1,
+                                    winnings = win, cWins = 1
+                                )
+                                winStatusText = "You won $win! Play again?"
+                                isFirstClick = true
+                            }
 
-                        7 -> {
-                            winStatusText = "7 loses. Play again?"
-                            viewModel.updateStats(userId = user.user_ID, losses = 1, cLosses = 1,
-                                lossAmt = myBet)
-                            isFirstClick = true
-                        }
+                            7 -> {
+                                winStatusText = "7 loses. Play again?"
+                                viewModel.updateStats(
+                                    userId = user.user_ID, losses = 1, cLosses = 1,
+                                    lossAmt = myBet
+                                )
+                                viewModel.updateBalance(user.user_ID, balance)
+                                isFirstClick = true
+                            }
 
-                        else -> {
-                            winStatusText = "Roll again"
+                            else -> {
+                                winStatusText = "Roll again"
+                            }
                         }
                     }
                 }
@@ -995,7 +1154,7 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
 
 @Composable
 fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
-    ForcePortraitOrientation()
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     val allUsers by viewModel.userList.collectAsState() // collect as state pulls most up to date db info
     val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID } // pick active user from user list
     Column(
@@ -1025,10 +1184,12 @@ fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
 
 @Composable
 fun Shop(
+
     navController: NavController,
     userViewModel: DoughbagViewModel,
     skinViewModel: SkinViewModel
 ) {
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     val currentUser = userViewModel.activeUser
     LaunchedEffect(currentUser) {
         currentUser?.let { skinViewModel.loadSkinsForUser(it.user_ID) }
@@ -1060,6 +1221,7 @@ fun Inventory(
     userViewModel: DoughbagViewModel, // Handles user balance, ID, auth state
     skinViewModel: SkinViewModel  // Handles available skins, active skin
 ) {
+    SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     val currentUser = userViewModel.activeUser // Assuming you have access to this
 
     // Tell ViewModel to load this user's data
