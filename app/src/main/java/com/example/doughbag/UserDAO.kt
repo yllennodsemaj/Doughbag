@@ -30,25 +30,23 @@ interface UserDao {
     @Query("update users set balance = :newBalance where user_ID = :user_ID")
     suspend fun updateBalance(user_ID: Int, newBalance: Double): Int
 
-    // can update stats based on what is passed
-    @Query("""
-        UPDATE users SET 
-        total_wins = total_wins + :w, 
-        total_losses = total_losses + :l, 
-        rWins = rWins + :rw, 
-        rLosses = rLosses + :rl, 
-        cWins = cWins + :cw,        
-        cLosses = cLosses + :cl, 
-        sWins = sWins + :sw, 
-        sLosses = sLosses + :sl, 
-        winnings = winnings + :winAmt, 
-        losses = losses + :lossAmt 
-        WHERE user_ID = :userId
-    """)
-    suspend fun updateStats(
-        userId: Int, w: Int, l: Int,
-        rw: Int, rl: Int, cw: Int, cl: Int,
-        sw: Int, sl: Int, winAmt: Double, lossAmt: Double
+    // can update stats based on what is passed, based on user_ID
+    @Query(""" 
+    update users set 
+    total_wins = total_wins + :wins, total_losses = total_losses + :losses, 
+    rWins = rWins + :rWins, rLosses = rLosses + :rLosses, 
+    cWins = cWins + :cWins, cLosses = cLosses + :cLosses, 
+    sWins = sWins + :sWins, sLosses = sLosses + :sLosses, 
+    winnings = winnings + :winnings, losses = losses + :lossAmt 
+    where user_ID = :userId 
+""")
+    suspend fun updateStats( // updates any stat passed or defaults to 0 - no update
+        userId: Int, wins: Int = 0,
+        losses: Int = 0, rWins: Int = 0,
+        rLosses: Int = 0, cWins: Int = 0,
+        cLosses: Int = 0, sWins: Int = 0,
+        sLosses: Int = 0, winnings: Double = 0.0,
+        lossAmt: Double = 0.0
     )
 
     @Query("select cWins from users where user_ID = :userId")
