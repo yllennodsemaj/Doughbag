@@ -361,6 +361,7 @@ class Pocket(id: Int, color: String)
 @Composable
 fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
     val view = LocalView.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     DisposableEffect(key1 = view) {
         val window = (view.context as? android.app.Activity)?.window
@@ -525,7 +526,11 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             lossAmt = blackBet)
                     }
                     // Zero is not even, odd, high, or low in roulette
-                    if (winningPocket.myId != 0) {
+                    if (winningPocket.myId == 0){
+                        winStatusText = "You lost"
+                        viewModel.updateStats(user.user_ID, losses = 1, rLosses = 1, lossAmt = myBet)
+                    }
+                    else {
                         if (winningPocket.myId % 2 == 1) {
                             win += oddBet * 2
                             viewModel.updateStats(
@@ -624,7 +629,16 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             label = { Text("My Number", fontSize = 12.sp) },
                             colors = textColors2,
                             modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
+
                         )
                         OutlinedTextField(
                             value = betNumber,
@@ -632,7 +646,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             label = { Text("Bet on Number", fontSize = 12.sp) },
                             colors = textColors,
                             modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
                         )
                         OutlinedTextField(
                             value = betRed,
@@ -640,7 +662,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             label = { Text("Bet on Red", fontSize = 12.sp) },
                             colors = textColors,
                             modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
                         )
                         OutlinedTextField(
                             value = betBlack,
@@ -648,7 +678,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             label = { Text("Bet on Black", fontSize = 12.sp) },
                             colors = textColors,
                             modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
                         )
                     }
                     Spacer(modifier = Modifier.width(4.dp))
@@ -659,7 +697,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             label = { Text("Bet on Odd", fontSize = 12.sp) },
                             colors = textColors,
                             modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
                         )
                         OutlinedTextField(
                             value = betEven,
@@ -667,7 +713,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             label = { Text("Bet on Even", fontSize = 12.sp) },
                             colors = textColors,
                             modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
                         )
                         OutlinedTextField(
                             value = betLow,
@@ -675,7 +729,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             label = { Text("Bet on 1 to 18", fontSize = 12.sp) },
                             colors = textColors,
                             modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
                         )
                         OutlinedTextField(
                             value = betHigh,
@@ -683,7 +745,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                             label = { Text("Bet on 19 to 36", fontSize = 12.sp) },
                             colors = textColors,
                             modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
                         )
                     }
                 }
@@ -766,7 +836,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
     var slot2 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.heart)) }
     var slot3 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.spade)) }
 
-    var bet by remember { mutableStateOf("10.0") }
+    var bet by remember { mutableStateOf("10") }
     var winStatusText by remember { mutableStateOf("") }
     Box(
         modifier = Modifier
@@ -967,7 +1037,7 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         else -> R.drawable.dice_6
     }
 
-    var bet by remember { mutableStateOf("10.0") }
+    var bet by remember { mutableStateOf("10") }
     var winStatusText by remember { mutableStateOf("7 or 11 wins on first roll!") }
     Box(
         modifier = Modifier
