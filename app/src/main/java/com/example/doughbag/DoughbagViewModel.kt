@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 
 // view model
-class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinDao) : ViewModel() {
+class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
 
     // pulls live list of users from db
     // stateflow auto updates live data
@@ -64,6 +64,37 @@ class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinD
         viewModelScope.launch(Dispatchers.IO) {
             userDao.updateStats(userId, wins, losses, rWins, rLosses,
                 cWins, cLosses, sWins, sLosses, winnings, lossAmt)
+        }
+    }
+
+    // Helper to get the list of IDs as a List<Int>
+    fun getOwnedIds(user: User): List<Int> {
+        return user.ownedSkinIds.split(",").mapNotNull { it.toIntOrNull() }
+    }
+    fun setActiveSkin(user: User, skin: Skin){
+        val listActiveSkins: MutableList<Int> = // transform string of active skins to mutable list
+            user.activeSkins.split(",").mapNotNull{ it.toIntOrNull() }.toMutableList()
+        if (skin is Skin.WheelSkin) {
+            listActiveSkins[0] = skin.skinID
+        }
+        else if (skin is Skin.DiceSkin) {
+            listActiveSkins[1] = skin.skinID
+        }
+        else if (skin is Skin.SlotSkin) {
+            listActiveSkins[2] = skin.skinID
+        }
+        user.activeSkins = listActiveSkins.joinToString { "," }
+        return
+    }
+
+    // Function to "buy" a skin
+    fun purchaseSkin(user: User, skinId: Int) {
+        val currentOwned = getOwnedIds(user).toMutableList()
+        if (!currentOwned.contains(skinId)) {
+            currentOwned.add(skinId)
+            user.ownedSkinIds = currentOwned.joinToString(",")
+            // Update the user in the database with the new string
+            viewModelScope.launch { userDao.updateUser(user) }
         }
     }
 
@@ -149,14 +180,13 @@ class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinD
 }
 
 class DoughbagViewModelFactory(
-    private val userDao: UserDao,
-    private val skinDao: SkinDao
+    private val userDao: UserDao
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         // This MUST check for DoughbagViewModel
         if (modelClass.isAssignableFrom(DoughbagViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return DoughbagViewModel(userDao, skinDao) as T
+            return DoughbagViewModel(userDao) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
