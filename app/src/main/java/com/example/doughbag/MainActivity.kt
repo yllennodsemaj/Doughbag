@@ -608,6 +608,8 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                     .fillMaxWidth()
 
                 val textColors = TextFieldDefaults.colors(
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Black,
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     focusedTextColor = Color.Black,
@@ -615,10 +617,12 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 )
 
                 val textColors2 = TextFieldDefaults.colors(
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Black,
                     focusedContainerColor = Color.Gray,
                     unfocusedContainerColor = Color.Gray,
-                    focusedTextColor = Color.Red,
-                    unfocusedTextColor = Color.Red
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
                 )
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -778,7 +782,7 @@ class SlotCard(id: Int, res: Int) {
 
 fun bet(bet: Double, viewModel: DoughbagViewModel): Boolean {
     val user = viewModel.userList.value.find { it.user_ID == viewModel.activeUser?.user_ID }
-    // pulling from userList forces most up to date balance
+    // pulling from userList forces most up-to-date balance
     if(user != null) {
         val balance = user.balance
         return bet in 10.0..balance
