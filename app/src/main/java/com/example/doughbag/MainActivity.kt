@@ -1,11 +1,9 @@
 package com.example.doughbag
 
-import android.R.attr.orientation
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -33,11 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.doughbag.ui.theme.DoughbagTheme
 import java.security.SecureRandom
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -49,20 +43,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ListItemDefaults.contentColor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -364,7 +355,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
     val keyboardController = LocalSoftwareKeyboardController.current
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     DisposableEffect(key1 = view) {
-        val window = (view.context as? android.app.Activity)?.window
+        val window = (view.context as? Activity)?.window
         if (window != null) {
             val controller = WindowCompat.getInsetsController(window, view)
             controller.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
@@ -397,7 +388,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
     var winStatusText by remember { mutableStateOf("")}
     val wheelNumbers = listOf(0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8,
         23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26)
-    val wheel = mutableListOf<Pocket>(Pocket(0, "Green"))
+    val wheel = mutableListOf(Pocket(0, "Green"))
 
     for(i in 1..wheelNumbers.size step 2)
     {
@@ -452,8 +443,8 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("$spinResult")
-                Text("$winStatusText")
+                Text(spinResult)
+                Text(winStatusText)
                 Image(
                     painter = painterResource(R.drawable.roulette),
                     contentDescription = "wheel",
@@ -498,95 +489,99 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                     spinResult = "The ball landed on: ${winningPocket.myId} ${winningPocket.myColor}"
                         // get winning result
                     if(liveUser != null) {
-                        val user = liveUser
                         var win = 0.0
 
                     if (winningPocket.myId == numTarget) { //
                         win += bet * 36
-                        viewModel.updateStats(user.user_ID, wins = 1, rWins = 1,
+                        viewModel.updateStats(
+                            liveUser.user_ID, wins = 1, rWins = 1,
                             winnings = bet * 36)}
                     else if(bet > 0){
-                        viewModel.updateStats(user.user_ID, losses = 1, rLosses = 1,
+                        viewModel.updateStats(
+                            liveUser.user_ID, losses = 1, rLosses = 1,
                             lossAmt = bet)
                     }
                     if (winningPocket.myColor == "Red") {
                         win += redBet * 2
-                        viewModel.updateStats(user.user_ID, wins = 1, rWins = 1,
+                        viewModel.updateStats(
+                            liveUser.user_ID, wins = 1, rWins = 1,
                             winnings = redBet * 2)}
                     else if(redBet > 0){
-                        viewModel.updateStats(user.user_ID, losses = 1, rLosses = 1,
+                        viewModel.updateStats(
+                            liveUser.user_ID, losses = 1, rLosses = 1,
                             lossAmt = redBet)
                     }
                     if (winningPocket.myColor == "Black") {
                         win += blackBet * 2
-                        viewModel.updateStats(user.user_ID, wins = 1, rWins = 1,
+                        viewModel.updateStats(
+                            liveUser.user_ID, wins = 1, rWins = 1,
                             winnings = blackBet * 2)}
                     else if(blackBet > 0){
-                        viewModel.updateStats(user.user_ID, losses = 1, rLosses = 1,
+                        viewModel.updateStats(
+                            liveUser.user_ID, losses = 1, rLosses = 1,
                             lossAmt = blackBet)
                     }
                     // Zero is not even, odd, high, or low in roulette
                     if (winningPocket.myId == 0){
                         winStatusText = "You lost"
-                        viewModel.updateStats(user.user_ID, losses = 1, rLosses = 1, lossAmt = myBet)
+                        viewModel.updateStats(liveUser.user_ID, losses = 1, rLosses = 1, lossAmt = myBet)
                     }
                     else {
                         if (winningPocket.myId % 2 == 1) {
                             win += oddBet * 2
                             viewModel.updateStats(
-                                user.user_ID, wins = 1, rWins = 1,
+                                liveUser.user_ID, wins = 1, rWins = 1,
                                 winnings = oddBet * 2
                             )
                         } else if(oddBet > 0){
                             viewModel.updateStats(
-                                user.user_ID, losses = 1, rLosses = 1,
+                                liveUser.user_ID, losses = 1, rLosses = 1,
                                 lossAmt = oddBet
                             )
                         }
                         if (winningPocket.myId % 2 == 0) {
                             win += evenBet * 2
                             viewModel.updateStats(
-                                user.user_ID, wins = 1, rWins = 1,
+                                liveUser.user_ID, wins = 1, rWins = 1,
                                 winnings = evenBet * 2
                             )
                         } else if(evenBet > 0){
                             viewModel.updateStats(
-                                user.user_ID, losses = 1, rLosses = 1,
+                                liveUser.user_ID, losses = 1, rLosses = 1,
                                 lossAmt = evenBet
                             )
                         }
                         if (winningPocket.myId in 1..18) {
                             win += lowBet * 2
                             viewModel.updateStats(
-                                user.user_ID, wins = 1, rWins = 1,
+                                liveUser.user_ID, wins = 1, rWins = 1,
                                 winnings = lowBet * 2
                             )
                         } else if(lowBet > 0){
                             viewModel.updateStats(
-                                user.user_ID, losses = 1, rLosses = 1,
+                                liveUser.user_ID, losses = 1, rLosses = 1,
                                 lossAmt = lowBet
                             )
                         }
                         if (winningPocket.myId in 19..36) {
                             win += highBet * 2
                             viewModel.updateStats(
-                                user.user_ID, wins = 1, rWins = 1,
+                                liveUser.user_ID, wins = 1, rWins = 1,
                                 winnings = highBet * 2
                             )
                         } else if(highBet > 0){
                             viewModel.updateStats(
-                                user.user_ID, losses = 1, rLosses = 1,
+                                liveUser.user_ID, losses = 1, rLosses = 1,
                                 lossAmt = highBet
                             )
                         }
-                        if(win > 0) {
-                            winStatusText = "You won $$win!"
-                        }
-                        else{
-                            winStatusText = "You lost."
+                        winStatusText = if(win > 0) {
+                            "You won $$win!"
+                        } else{
+                            "You lost."
                         }
                         thisGameBalance += win
-                        viewModel.updateBalance(user.user_ID, thisGameBalance)
+                        viewModel.updateBalance(liveUser.user_ID, thisGameBalance)
                     }
                     }
 
@@ -796,7 +791,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
     val view = LocalView.current
     val keyboardController = LocalSoftwareKeyboardController.current // need this to force num pad for bets
     DisposableEffect(key1 = view) {
-        val window = (view.context as? android.app.Activity)?.window
+        val window = (view.context as? Activity)?.window
         if (window != null) {
             val controller = WindowCompat.getInsetsController(window, view)
             controller.hide(WindowInsetsCompat.Type.statusBars() or
@@ -829,7 +824,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
     val seven = SlotCard(5, R.drawable.seven)
     val jackpot = SlotCard(6, R.drawable.jackpot)
 
-    val slots = listOf<SlotCard>(
+    val slots = listOf(
         hearts, hearts, hearts, hearts, hearts, hearts,
         diamonds, diamonds, diamonds, diamonds, diamonds,
         clubs, clubs, clubs, clubs, spades, spades, spades,
@@ -994,7 +989,7 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
     val keyboardController =
         LocalSoftwareKeyboardController.current // need this to force num pad for bets
     DisposableEffect(key1 = view) {
-        val window = (view.context as? android.app.Activity)?.window
+        val window = (view.context as? Activity)?.window
         if (window != null) {
             val controller = WindowCompat.getInsetsController(window, view)
             controller.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
@@ -1020,8 +1015,8 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         navController.navigate("chooseUser")
     }
 
-    var diceResult1 by remember { mutableStateOf(1) }
-    var diceResult2 by remember { mutableStateOf(2) }
+    var diceResult1 by remember { mutableIntStateOf(1) }
+    var diceResult2 by remember { mutableIntStateOf(2) }
 
     val imageResource1 = when (diceResult1) {
         1 -> R.drawable.dice_1
@@ -1128,7 +1123,7 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
             )
 
             var isFirstClick by remember { mutableStateOf(true) }
-            var pointValue by remember { mutableStateOf(0) }
+            var pointValue by remember { mutableIntStateOf(0) }
 
             Button(onClick = {
                 if (user == null) return@Button
@@ -1246,8 +1241,8 @@ fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
             Text("Craps Losses: ${user.cLosses}")
             Text("Roulette Wins: ${user.rWins}")
             Text("Roulette Losses: ${user.rLosses}")
-            Text("Total winnings: \$${user.winnings}")
-            Text("Total losses: \$${user.losses}")
+            Text($$"Total winnings: $$${user.winnings}")
+            Text($$"Total losses: $$${user.losses}")
         } else {
             Text("No active user!")
         }
