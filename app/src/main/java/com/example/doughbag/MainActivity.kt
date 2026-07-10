@@ -272,7 +272,7 @@ fun Play(navController: NavController) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.roulette_icon),
+                    painter = painterResource(id = R.drawable.pretty_roulette),
                     contentDescription = "Play roulette",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
@@ -441,7 +441,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 Text(spinResult)
                 Text(winStatusText)
                 Image(
-                    painter = painterResource(R.drawable.roulette),
+                    painter = painterResource(R.drawable.pretty_roulette),
                     contentDescription = "wheel",
                     modifier = Modifier.size(200.dp)
                 )
@@ -1270,7 +1270,8 @@ fun Inventory(navController: NavController, viewModel: DoughbagViewModel) {
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text("My Inventory", fontSize = 24.sp)
             LazyColumn {

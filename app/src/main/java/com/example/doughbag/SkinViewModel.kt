@@ -19,15 +19,6 @@ class SkinViewModel(private val skinDao: SkinDao) : ViewModel() {
         _currentUserId.value = userId
     }
 
-    // 3. Fetch the raw database records for the active user
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val userOwnedSkinsFromDb: Flow<List<Owned_Skins>> = _currentUserId.flatMapLatest { userId ->
-        if (userId != null) {
-            skinDao.getOwnedSkinsForUser(userId)
-        } else {
-            flowOf(emptyList()) // Return empty if no user is set
-        }
-    }
 
     private val _activeSkin = MutableStateFlow<Skin?>(null)
     val activeSkin: StateFlow<Skin?> = _activeSkin.asStateFlow()
