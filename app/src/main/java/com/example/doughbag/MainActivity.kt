@@ -272,7 +272,7 @@ fun Play(navController: NavController) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.roulette_icon),
+                    painter = painterResource(id = R.drawable.pretty_roulette),
                     contentDescription = "Play roulette",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
@@ -441,7 +441,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 Text(spinResult)
                 Text(winStatusText)
                 Image(
-                    painter = painterResource(R.drawable.roulette),
+                    painter = painterResource(R.drawable.pretty_roulette),
                     contentDescription = "wheel",
                     modifier = Modifier.size(200.dp)
                 )
@@ -1009,26 +1009,37 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         println("no active user")
         navController.navigate("chooseUser")
     }
+    else {
 
     var diceResult1 by remember { mutableIntStateOf(1) }
     var diceResult2 by remember { mutableIntStateOf(2) }
 
+    val diceSkin = remember(user.activeSkins) {
+        val defaultSkin = Skin.masterSkinList.masterSkinList.getOrNull(1) as? Skin.DiceSkin
+            ?: Skin.masterSkinList.masterSkinList.first { it is Skin.DiceSkin } as Skin.DiceSkin
+
+        val skinIds = user.activeSkins.split(",").mapNotNull { it.toIntOrNull() }
+        val diceSkinID = skinIds.getOrNull(1) ?: 1
+        Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.DiceSkin ?: defaultSkin
+
+    }
+
     val imageResource1 = when (diceResult1) {
-        1 -> R.drawable.dice_1
-        2 -> R.drawable.dice_2
-        3 -> R.drawable.dice_3
-        4 -> R.drawable.dice_4
-        5 -> R.drawable.dice_5
-        else -> R.drawable.dice_6
+        1 -> diceSkin.dice1
+        2 -> diceSkin.dice2
+        3 -> diceSkin.dice3
+        4 -> diceSkin.dice4
+        5 -> diceSkin.dice5
+        else -> diceSkin.dice6
     }
 
     val imageResource2 = when (diceResult2) {
-        1 -> R.drawable.dice_1
-        2 -> R.drawable.dice_2
-        3 -> R.drawable.dice_3
-        4 -> R.drawable.dice_4
-        5 -> R.drawable.dice_5
-        else -> R.drawable.dice_6
+        1 -> diceSkin.dice1
+        2 -> diceSkin.dice2
+        3 -> diceSkin.dice3
+        4 -> diceSkin.dice4
+        5 -> diceSkin.dice5
+        else -> diceSkin.dice6
     }
 
     var bet by remember { mutableStateOf("10") }
@@ -1069,147 +1080,152 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = winStatusText,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF4CAF50),
-            modifier = Modifier.height(30.dp)
-        )
-
-        OutlinedTextField(
-            value = bet,
-            onValueChange = { bet = it },
-            label = { Text("Bet") },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
-            ),
-            modifier = Modifier.padding(5.dp),
-            // force number pad
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done // bottom right key = done
-            ),
-            // collapse keyboard on done click
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    keyboardController?.hide()
-                }
-            )
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
-        {
-            Image(
-                painter = painterResource(imageResource1),
-                contentDescription = "dice 1",
-                modifier = Modifier.size(100.dp)
+            Text(
+                text = winStatusText,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4CAF50),
+                modifier = Modifier.height(30.dp)
             )
 
-            Image(
-                painter = painterResource(imageResource2),
-                contentDescription = "dice 2",
-                modifier = Modifier.size(100.dp)
+            OutlinedTextField(
+                value = bet,
+                onValueChange = { bet = it },
+                label = { Text("Bet") },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
+                modifier = Modifier.padding(5.dp),
+                // force number pad
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done // bottom right key = done
+                ),
+                // collapse keyboard on done click
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                )
             )
 
-            var isFirstClick by remember { mutableStateOf(true) }
-            var pointValue by remember { mutableIntStateOf(0) }
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Button(onClick = {
-                if (user == null) return@Button
-                else {
-                    winStatusText = ""
-                    diceResult1 = CasinoRng.nextInt(1, 6)
-                    diceResult2 = CasinoRng.nextInt(1, 6)
-                    val myBet = bet.toDoubleOrNull() ?: 0.0
-                    val sum = diceResult1 + diceResult2
+            Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
+            {
+                Image(
+                    painter = painterResource(imageResource1),
+                    contentDescription = "dice 1",
+                    modifier = Modifier.size(100.dp)
+                )
 
-                    if (isFirstClick) { // initial roll
-                        if (myBet < 10.0) {
-                            Toast.makeText(context, "Minimum bet $10",
-                                Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        if (myBet > balance) {
-                            Toast.makeText(context, "Insufficient funds",
-                                Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        if (!bet(myBet, viewModel)) {
-                            Toast.makeText(
-                                context, "Can't bet this",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@Button
-                        }
-                        balance -= myBet * 1.0
-                        viewModel.updateBalance(user.user_ID, balance)
-                        when (sum) {
-                            7, 11 -> {
-                                val win: Double = myBet * 2.0
-                                balance += win
-                                viewModel.updateBalance(user.user_ID, balance)
-                                viewModel.updateStats(
-                                    userId = user.user_ID, wins = 1, winnings = win,
-                                    cWins = 1
-                                )
-                                winStatusText = "You won: $win! Play again?"
-                                isFirstClick = true
+                Image(
+                    painter = painterResource(imageResource2),
+                    contentDescription = "dice 2",
+                    modifier = Modifier.size(100.dp)
+                )
+
+                var isFirstClick by remember { mutableStateOf(true) }
+                var pointValue by remember { mutableIntStateOf(0) }
+
+                Button(onClick = {
+                    if (user == null) return@Button
+                    else {
+                        winStatusText = ""
+                        diceResult1 = CasinoRng.nextInt(1, 6)
+                        diceResult2 = CasinoRng.nextInt(1, 6)
+                        val myBet = bet.toDoubleOrNull() ?: 0.0
+                        val sum = diceResult1 + diceResult2
+
+                        if (isFirstClick) { // initial roll
+                            if (myBet < 10.0) {
+                                Toast.makeText(
+                                    context, "Minimum bet $10",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
                             }
-
-                            2, 3, 12 -> {
-                                winStatusText = "Craps! Play again?"
-                                viewModel.updateStats(
-                                    userId = user.user_ID, losses = 1, lossAmt = myBet,
-                                    cLosses = 1
-                                )
-                                viewModel.updateBalance(user.user_ID, balance)
-                                isFirstClick = true
+                            if (myBet > balance) {
+                                Toast.makeText(
+                                    context, "Insufficient funds",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
                             }
-
-                            else -> {
-                                pointValue = sum
-                                winStatusText = "$sum wins, 7 loses. Roll again!"
-                                isFirstClick = false
+                            if (!bet(myBet, viewModel)) {
+                                Toast.makeText(
+                                    context, "Can't bet this",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
                             }
-                        }
-                    } else {
-                        when (sum) {
-                            pointValue -> {
-                                val win = myBet * 2.0
-                                balance += win
-                                viewModel.updateBalance(user.user_ID, balance)
-                                viewModel.updateStats(
-                                    userId = user.user_ID, wins = 1,
-                                    winnings = win, cWins = 1
-                                )
-                                winStatusText = "You won $win! Play again?"
-                                isFirstClick = true
-                            }
+                            balance -= myBet * 1.0
+                            viewModel.updateBalance(user.user_ID, balance)
+                            when (sum) {
+                                7, 11 -> {
+                                    val win: Double = myBet * 2.0
+                                    balance += win
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, wins = 1, winnings = win,
+                                        cWins = 1
+                                    )
+                                    winStatusText = "You won: $win! Play again?"
+                                    isFirstClick = true
+                                }
 
-                            7 -> {
-                                winStatusText = "7 loses. Play again?"
-                                viewModel.updateStats(
-                                    userId = user.user_ID, losses = 1, cLosses = 1,
-                                    lossAmt = myBet
-                                )
-                                viewModel.updateBalance(user.user_ID, balance)
-                                isFirstClick = true
-                            }
+                                2, 3, 12 -> {
+                                    winStatusText = "Craps! Play again?"
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, losses = 1, lossAmt = myBet,
+                                        cLosses = 1
+                                    )
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    isFirstClick = true
+                                }
 
-                            else -> {
-                                winStatusText = "Roll again"
+                                else -> {
+                                    pointValue = sum
+                                    winStatusText = "$sum wins, 7 loses. Roll again!"
+                                    isFirstClick = false
+                                }
+                            }
+                        } else {
+                            when (sum) {
+                                pointValue -> {
+                                    val win = myBet * 2.0
+                                    balance += win
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, wins = 1,
+                                        winnings = win, cWins = 1
+                                    )
+                                    winStatusText = "You won $win! Play again?"
+                                    isFirstClick = true
+                                }
+
+                                7 -> {
+                                    winStatusText = "7 loses. Play again?"
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, losses = 1, cLosses = 1,
+                                        lossAmt = myBet
+                                    )
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    isFirstClick = true
+                                }
+
+                                else -> {
+                                    winStatusText = "Roll again"
+                                }
                             }
                         }
                     }
+                }) {
+                    Text(text = stringResource(R.string.rollBtnTxt))
                 }
-            }) {
-                Text(text = stringResource(R.string.rollBtnTxt))
             }
         }
     }
@@ -1264,13 +1280,14 @@ fun Inventory(navController: NavController, viewModel: DoughbagViewModel) {
         navController.navigate("chooseUser")
     } else {
         allSkins = Skin.masterSkinList.masterSkinList
-        userOwnedIds = viewModel.getOwnedIds(user)
-        myOwnedSkins = allSkins.filter { it.skinID in userOwnedIds }
+        //userOwnedIds = allSkins
+        myOwnedSkins = allSkins
         // filters user owned skins for inventory view
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text("My Inventory", fontSize = 24.sp)
             LazyColumn {

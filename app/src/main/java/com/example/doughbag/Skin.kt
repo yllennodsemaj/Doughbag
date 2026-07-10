@@ -19,14 +19,11 @@ sealed class Skin(val skinID: Int, val skinName: String, val skinPrice: Int, var
         val diamond: Int, val jack: Int, val seven: Int
     ) : Skin(skinID, skinName, skinPrice)
 
-    public fun getMasterSkinList(): List<Skin> {
-        return masterSkinList
-    }
 // create the skins from a list
 object masterSkinList {
     val masterSkinList = listOf<Skin>(
     Skin.WheelSkin(0, "Default Wheel", 0,
-        R.drawable.roulette_icon),
+        R.drawable.pretty_roulette),
     Skin.DiceSkin(1, "Default Dice", 0,
         R.drawable.dice_1, R.drawable.dice_2,R.drawable.dice_3,
         R.drawable.dice_4, R.drawable.dice_5, R.drawable.dice_6),
@@ -44,7 +41,7 @@ object masterSkinList {
     Skin.SlotSkin(5, "Neon Slots", 10000,
         R.drawable.neon_spade, R.drawable.neon_club, R.drawable.neon_heart,
         R.drawable.neon_diamond, R.drawable.neon_jackpot, R.drawable.neon_seven),
-    Skin.WheelSkin(0, "Pretty Wheel", 10000,
+    Skin.WheelSkin(6, "Pretty Wheel", 10000,
         R.drawable.pretty_roulette)
 )}
 }

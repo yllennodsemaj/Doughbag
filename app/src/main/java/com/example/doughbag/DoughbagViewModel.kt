@@ -83,7 +83,7 @@ class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
         else if (skin is Skin.SlotSkin) {
             listActiveSkins[2] = skin.skinID
         }
-        user.activeSkins = listActiveSkins.joinToString { "," }
+        user.activeSkins = listActiveSkins.joinToString(separator = ",")
         return
     }
 
