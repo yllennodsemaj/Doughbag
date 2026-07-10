@@ -15,7 +15,6 @@ class ShopManager(private val database: AppDatabase) {
             // crashes or throws an error, ALL changes are reversed automatically.
             database.withTransaction {
                 val userDao = database.userDao()
-                val skinDao = database.skinDao()
 
                 // 1. Check current balance
                 val currentBalance = userDao.getBalanceSync(userId)
@@ -29,7 +28,6 @@ class ShopManager(private val database: AppDatabase) {
                         user_ID = userId,
                         name = skin.skinName
                     )
-                    skinDao.insertOwnedSkin(newSkinRecord)
 
                     // Transaction successful!
                     true

@@ -94,12 +94,8 @@ fun DoughbagNavigation() {
 
     val userViewModel: DoughbagViewModel = viewModel(
         factory = DoughbagViewModelFactory(
-            userDao = database.userDao(),
-            skinDao = database.skinDao()
+            userDao = database.userDao()
         )
-    )
-    val skinViewModel: SkinViewModel = viewModel(
-        factory = SkinViewModel.SkinViewModelFactory(database.skinDao())
     )
 
     NavHost(navController = navController, startDestination = "home") {
@@ -111,14 +107,14 @@ fun DoughbagNavigation() {
         composable("roulette") { Roulette(navController, userViewModel) }
         composable("craps") { Craps(navController, userViewModel) }
         composable("slots") { Slots(navController, userViewModel) }
-        composable("shop") { Shop(navController,userViewModel, skinViewModel) }
-        composable("inventory") { Inventory(navController, userViewModel, skinViewModel) }
+        composable("shop") { Shop(navController, userViewModel) }
+        composable("inventory") { Inventory(navController, userViewModel) }
         composable("stats") { Statistics(navController, userViewModel) }
     }
 }
 // helper function for screen orientation
 fun Context.findActivity(): Activity? {
-    var currentContext = this
+    var currentContext = this // this ia AI generated
     while (currentContext is ContextWrapper) {
         if (currentContext is Activity) return currentContext
         currentContext = currentContext.baseContext
@@ -488,7 +484,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                         return@Button
                     }
                     // if there's a number bet and num not between 1 and 36 cant bet
-                    if ( bet > 0 && numTarget !in -1..36 ) {
+                    if ( bet > 0 && numTarget !in 0..36 ) {
                         Toast.makeText(context, "Invalid roulette number!", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
@@ -817,7 +813,7 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
         println("no active user")
         navController.navigate("chooseUser")
     }
-    // praise AI
+
     val hearts = SlotCard(1, R.drawable.heart)
     val diamonds = SlotCard(2, R.drawable.diamond)
     val clubs = SlotCard(3, R.drawable.clover)
@@ -1253,19 +1249,14 @@ fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
 }
 
 @Composable
-fun Shop(
-
-    navController: NavController,
-    userViewModel: DoughbagViewModel,
-    skinViewModel: SkinViewModel
-) {
+fun Shop(navController: NavController, userViewModel: DoughbagViewModel,
+    skinViewModel: SkinViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     val currentUser = userViewModel.activeUser
     LaunchedEffect(currentUser) {
         currentUser?.let { skinViewModel.loadSkinsForUser(it.user_ID) }
     }
     // Observe ONLY the shop skins
-    val shopSkins by skinViewModel.shopSkins.collectAsState()
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -1286,32 +1277,42 @@ fun Shop(
 }
 
 @Composable
-fun Inventory(
-    navController: NavController,
-    userViewModel: DoughbagViewModel, // Handles user balance, ID, auth state
-    skinViewModel: SkinViewModel  // Handles available skins, active skin
-) {
+fun Inventory(navController: NavController, viewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    val currentUser = userViewModel.activeUser // Assuming you have access to this
-
-    // Tell ViewModel to load this user's data
-    LaunchedEffect(currentUser) {
-        currentUser?.let { skinViewModel.loadSkinsForUser(it.user_ID) }
+    val user = viewModel.activeUser
+    val allSkins: List<Skin>
+    val userOwnedIds: List<Int>
+    val myOwnedSkins: List<Skin>
+    if(user != null) {
+        allSkins = Skin.masterSkinList.masterSkinList
+        userOwnedIds = viewModel.getOwnedIds(user)
+        myOwnedSkins = allSkins.filter { it.skinID in userOwnedIds }
+        // filters user owned skins for inventory view
     }
-
-    // Observe ONLY the inventory skins
-    val mySkins by skinViewModel.inventorySkins.collectAsState()
+    else {
+        navController.navigate("chooseUser")
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("My Inventory", fontSize = 24.sp)
-
+        userList.forEach { user ->
+            Button(
+                onClick = {
+                    viewModel.setActiveUser(user) // from here on this user is "active"
+                    navController.navigate("play")
+                },
+                modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)
+            ) {
+                Text("${user.user_name}  $${user.balance}")
+            }
+        }
         LazyColumn {
-            items(mySkins) { skin ->
+            myOwnedSkins.forEach { skin ->
                 Button(onClick = {
-                    skinViewModel.setActiveSkin(skin)
+                    viewModel.setActiveSkin(skin)
                     navController.navigate("play")
                 }) {
                     Text("Equip ${skin.skinName}")

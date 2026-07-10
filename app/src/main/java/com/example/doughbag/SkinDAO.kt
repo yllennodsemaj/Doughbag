@@ -13,13 +13,13 @@ interface SkinDao {
     // 1. Give a user a new skin (when they buy it)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOwnedSkin(skin: Owned_Skins)
+    @Query("SELECT * FROM owned_skins WHERE user_ID = :user_ID")
+    fun getUserPurchasedSkins(user_ID: Int): Flow<List<Owned_Skins>>
 
-    // 2. Get just the list of skins a specific user owns
-    @Query("SELECT * FROM owned_skins WHERE user_ID = :userId")
-    fun getOwnedSkinsForUser(userId: Int): Flow<List<Owned_Skins>>
+    @Query("select * from skins where user_ID")
 
-    // 3. (Optional but powerful) Get the User AND their Skins together in one object
-    @Transaction
-    @Query("SELECT * FROM users WHERE user_ID = :userId")
-    fun getUserWithSkins(userId: Int): Flow<User_With_Skins>
+
+    // buy a skin for a user
+    @Query("update skins set owned = user_ID where skin_ID = :skin_ID")
+    fun buySkin(user_ID: Int, skin_ID: Int)
 }

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 
 // view model
-class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinDao) : ViewModel() {
+class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
 
     // pulls live list of users from db
     // stateflow auto updates live data
@@ -64,6 +64,34 @@ class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinD
         viewModelScope.launch(Dispatchers.IO) {
             userDao.updateStats(userId, wins, losses, rWins, rLosses,
                 cWins, cLosses, sWins, sLosses, winnings, lossAmt)
+        }
+    }
+
+    // Helper to get the list of IDs as a List<Int>
+    fun getOwnedIds(user: User): List<Int> {
+        return user.ownedSkinIds.split(",").mapNotNull { it.toIntOrNull() }
+    }
+
+    fun setActiveWheelSkin(skin: Skin) {
+
+    }
+
+    fun setActiveCrapsSkin(skin: Skin) {
+
+    }
+
+    fun setActiveSlotsSkin(skin: Skin) {
+
+    }
+
+    // Function to "buy" a skin
+    fun purchaseSkin(user: User, skinId: Int) {
+        val currentOwned = getOwnedIds(user).toMutableList()
+        if (!currentOwned.contains(skinId)) {
+            currentOwned.add(skinId)
+            user.ownedSkinIds = currentOwned.joinToString(",")
+            // Update the user in the database with the new string
+            viewModelScope.launch { userDao.updateUser(user) }
         }
     }
 
