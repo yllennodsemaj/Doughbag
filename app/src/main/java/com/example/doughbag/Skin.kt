@@ -15,7 +15,7 @@ sealed class Skin(val skinID: Int, val skinName: String, val skinPrice: Int) {
 
     class SlotSkin(
         skinID: Int, skinName: String, skinPrice: Int,
-        val clover: Int, val club: Int, val heart: Int,
+        val spade: Int, val club: Int, val heart: Int,
         val diamond: Int, val jack: Int, val seven: Int
     ) : Skin(skinID, skinName, skinPrice)
 
