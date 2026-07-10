@@ -41,7 +41,7 @@ object masterSkinList {
     Skin.SlotSkin(5, "Neon Slots", 10000,
         R.drawable.neon_spade, R.drawable.neon_club, R.drawable.neon_heart,
         R.drawable.neon_diamond, R.drawable.neon_jackpot, R.drawable.neon_seven),
-    Skin.WheelSkin(0, "Pretty Wheel", 10000,
+    Skin.WheelSkin(6, "Pretty Wheel", 10000,
         R.drawable.pretty_roulette)
 )}
 }
