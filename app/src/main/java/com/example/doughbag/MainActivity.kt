@@ -1262,6 +1262,7 @@ fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
     }
 }
 
+// not yet implemented
 @Composable
 fun Shop(navController: NavController, userViewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
