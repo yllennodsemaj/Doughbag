@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -385,6 +386,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
         23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26)
     val wheel = mutableListOf(Pocket(0, "Green"))
 
+    val wheelSkin = remember(liveUser?.activeSkins) {
+        val defaultSkin = Skin.masterSkinList.masterSkinList.getOrNull(1) as? Skin.WheelSkin
+            ?: Skin.masterSkinList.masterSkinList.first { it is Skin.WheelSkin } as Skin.WheelSkin
+
+        val skinIds = liveUser?.activeSkins?.split(",")?.mapNotNull { it.toIntOrNull() }
+        val diceSkinID = skinIds?.getOrNull(0) ?: 0
+        Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.WheelSkin ?: defaultSkin
+    }
+
     for(i in 1..wheelNumbers.size step 2)
     {
         wheel += Pocket(i, "Red")
@@ -441,7 +451,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 Text(spinResult)
                 Text(winStatusText)
                 Image(
-                    painter = painterResource(R.drawable.pretty_roulette),
+                    painter = painterResource(wheelSkin.wheelRes),
                     contentDescription = "wheel",
                     modifier = Modifier.size(200.dp)
                 )
@@ -812,12 +822,21 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
         navController.navigate("chooseUser")
     }
 
-    val hearts = SlotCard(1, R.drawable.heart)
-    val diamonds = SlotCard(2, R.drawable.diamond)
-    val clubs = SlotCard(3, R.drawable.clover)
-    val spades = SlotCard(4, R.drawable.spade)
-    val seven = SlotCard(5, R.drawable.seven)
-    val jackpot = SlotCard(6, R.drawable.jackpot)
+    val slotSkin = remember(user?.activeSkins) {
+        val defaultSkin = Skin.masterSkinList.masterSkinList.getOrNull(1) as? Skin.SlotSkin
+            ?: Skin.masterSkinList.masterSkinList.first { it is Skin.SlotSkin } as Skin.SlotSkin
+
+        val skinIds = user?.activeSkins?.split(",")?.mapNotNull { it.toIntOrNull() }
+        val diceSkinID = skinIds?.getOrNull(2) ?: 2
+        Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.SlotSkin ?: defaultSkin
+    }
+
+    val hearts = SlotCard(1, slotSkin.heart)
+    val diamonds = SlotCard(2, slotSkin.diamond)
+    val clubs = SlotCard(3, slotSkin.club)
+    val spades = SlotCard(4, slotSkin.clover)
+    val seven = SlotCard(5, slotSkin.seven)
+    val jackpot = SlotCard(6, slotSkin.jack)
 
     val slots = listOf(
         hearts, hearts, hearts, hearts, hearts, hearts,
@@ -826,12 +845,13 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
         seven, seven, jackpot
     )
 
-    var slot1 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.clover)) }
-    var slot2 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.heart)) }
-    var slot3 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.spade)) }
+    var slot1 : SlotCard by remember { mutableStateOf(SlotCard(1, slotSkin.club)) }
+    var slot2 : SlotCard by remember { mutableStateOf(SlotCard(1, slotSkin.heart)) }
+    var slot3 : SlotCard by remember { mutableStateOf(SlotCard(1, slotSkin.clover)) }
 
     var bet by remember { mutableStateOf("10") }
     var winStatusText by remember { mutableStateOf("") }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -1004,6 +1024,11 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
     val context = LocalContext.current
     val allUsers by viewModel.userList.collectAsState()
     val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
+
+    LaunchedEffect(user?.activeSkins) {
+        println("Current skins = ${user?.activeSkins}")
+    }
+
     var balance = user?.balance ?: 0.0
     if(user == null) {
         println("no active user")
@@ -1021,8 +1046,14 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         val skinIds = user.activeSkins.split(",").mapNotNull { it.toIntOrNull() }
         val diceSkinID = skinIds.getOrNull(1) ?: 1
         Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.DiceSkin ?: defaultSkin
-
     }
+
+//    val diceSkin = remember(user.activeSkins) {
+//        val skins = user.activeSkins.split(",").map { it.toInt() }
+//
+//
+//        Skin.masterSkinList.masterSkinList[skins[1]] as Skin.DiceSkin
+//    }
 
     val imageResource1 = when (diceResult1) {
         1 -> diceSkin.dice1
