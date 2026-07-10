@@ -94,8 +94,7 @@ fun DoughbagNavigation() {
 
     val userViewModel: DoughbagViewModel = viewModel(
         factory = DoughbagViewModelFactory(
-            userDao = database.userDao()
-        )
+            userDao = database.userDao())
     )
 
     NavHost(navController = navController, startDestination = "home") {
@@ -1249,31 +1248,10 @@ fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
 }
 
 @Composable
-fun Shop(navController: NavController, userViewModel: DoughbagViewModel,
-    skinViewModel: SkinViewModel) {
+fun Shop(navController: NavController, userViewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     val currentUser = userViewModel.activeUser
-    LaunchedEffect(currentUser) {
-        currentUser?.let { skinViewModel.loadSkinsForUser(it.user_ID) }
-    }
-    // Observe ONLY the shop skins
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Skin Shop", fontSize = 24.sp)
-        LazyColumn {
-            items(shopSkins) { skin ->
-                Button(onClick = {
-                    println("Triggering purchase logic for ${skin.skinName}")
-                }) {
-                    Text("Buy ${skin.skinName} for $${skin.skinPrice}")
-                }
-            }
 
-        }
-        Button(onClick = { navController.navigate("play") }) { Text("Go back") }
-    }
 }
 
 @Composable
@@ -1283,41 +1261,32 @@ fun Inventory(navController: NavController, viewModel: DoughbagViewModel) {
     val allSkins: List<Skin>
     val userOwnedIds: List<Int>
     val myOwnedSkins: List<Skin>
-    if(user != null) {
+    if(user == null) {
+        navController.navigate("chooseUser")
+    } else {
         allSkins = Skin.masterSkinList.masterSkinList
         userOwnedIds = viewModel.getOwnedIds(user)
         myOwnedSkins = allSkins.filter { it.skinID in userOwnedIds }
         // filters user owned skins for inventory view
-    }
-    else {
-        navController.navigate("chooseUser")
-    }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("My Inventory", fontSize = 24.sp)
-        userList.forEach { user ->
-            Button(
-                onClick = {
-                    viewModel.setActiveUser(user) // from here on this user is "active"
-                    navController.navigate("play")
-                },
-                modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)
-            ) {
-                Text("${user.user_name}  $${user.balance}")
-            }
-        }
-        LazyColumn {
-            myOwnedSkins.forEach { skin ->
-                Button(onClick = {
-                    viewModel.setActiveSkin(skin)
-                    navController.navigate("play")
-                }) {
-                    Text("Equip ${skin.skinName}")
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("My Inventory", fontSize = 24.sp)
+            LazyColumn {
+                items(myOwnedSkins) { skin ->
+                    Button(onClick = {
+                        viewModel.setActiveSkin(user, skin)
+                        navController.navigate("play")
+                    },
+                        modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)) {
+                        Text("Equip ${skin.skinName}")
+                    }
                 }
             }
         }
     }
+
+
 }
