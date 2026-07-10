@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 // This tells Room which entities (tables) to include and what version the database is.
-@Database(entities = [User::class, Owned_Skins::class], version = 6, exportSchema = false)
+@Database(entities = [User::class], version = 7, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
