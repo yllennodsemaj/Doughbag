@@ -7,13 +7,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.withContext
 
 // view model
-class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinDao) : ViewModel() {
+class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
 
     // pulls live list of users from db
     // stateflow auto updates live data
@@ -67,96 +64,68 @@ class DoughbagViewModel(private val userDao: UserDao, private val skinDao: SkinD
         }
     }
 
-    private val _cWins = MutableStateFlow(0)
-    val cWins: StateFlow<Int> = _cWins
-    fun fetchCWins(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _cWins.value = userDao.getCWins(user_ID)
+    // Helper to get the list of IDs as a List<Int>
+    fun getOwnedIds(user: User): List<Int> {
+        return user.ownedSkinIds.split(",").mapNotNull { it.toIntOrNull() }
+    }
+//    fun setActiveSkin(user: User, skin: Skin){
+//        val listActiveSkins: MutableList<Int> = // transform string of active skins to mutable list
+//            user.activeSkins.split(",").mapNotNull{ it.toIntOrNull() }.toMutableList()
+//        if (skin is Skin.WheelSkin) {
+//            listActiveSkins[0] = skin.skinID
+//        }
+//        else if (skin is Skin.DiceSkin) {
+//            listActiveSkins[1] = skin.skinID
+//        }
+//        else if (skin is Skin.SlotSkin) {
+//            listActiveSkins[2] = skin.skinID
+//        }
+//        user.activeSkins = listActiveSkins.joinToString(separator = ",")
+//        return
+//    }
+
+    // Chat Jipity
+    fun setActiveSkin(user: User, skin: Skin) {
+        val listActiveSkins = user.activeSkins
+            .split(",")
+            .mapNotNull { it.toIntOrNull() }
+            .toMutableList()
+
+        when (skin) {
+            is Skin.WheelSkin -> listActiveSkins[0] = skin.skinID
+            is Skin.DiceSkin -> listActiveSkins[1] = skin.skinID
+            is Skin.SlotSkin -> listActiveSkins[2] = skin.skinID
+        }
+
+        user.activeSkins = listActiveSkins.joinToString(",")
+
+        viewModelScope.launch {
+            userDao.updateUser(user)
         }
     }
 
-    private val _cLosses = MutableStateFlow(0)
-    val cLosses: StateFlow<Int> = _cLosses
-    fun fetchCLosses(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _cLosses.value = userDao.getCLosses(user_ID)
+    // Function to "buy" a skin
+    // not yet implemented :(
+    fun purchaseSkin(user: User, skinId: Int) {
+        val currentOwned = getOwnedIds(user).toMutableList()
+        if (!currentOwned.contains(skinId)) {
+            currentOwned.add(skinId)
+            user.ownedSkinIds = currentOwned.joinToString(",")
+            // Update the user in the database with the new string
+            viewModelScope.launch { userDao.updateUser(user) }
         }
     }
 
-    private val _rWins = MutableStateFlow(0)
-    val rWins: StateFlow<Int> = _rWins
-    fun fetchRWins(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _rWins.value = userDao.getRWins(user_ID)
-        }
-    }
-
-    private val _rLosses = MutableStateFlow(0)
-    val rLosses: StateFlow<Int> = _rLosses
-    fun fetchRLosses(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _rLosses.value = userDao.getRLosses(user_ID)
-        }
-    }
-
-    private val _sWins = MutableStateFlow(0)
-    val sWins: StateFlow<Int> = _sWins
-    fun fetchSWins(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _sWins.value = userDao.getSWins(user_ID)
-        }
-    }
-
-    private val _sLosses = MutableStateFlow(0)
-    val sLosses: StateFlow<Int> = _sLosses
-    fun fetchSLosses(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _sLosses.value = userDao.getSLosses(user_ID)
-        }
-    }
-
-    private val _numWins = MutableStateFlow(0)
-    val numWins: StateFlow<Int> = _numWins
-    fun fetchNumWins(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _numWins.value = userDao.getNumWins(user_ID)
-        }
-    }
-
-    private val _numLosses = MutableStateFlow(0)
-    val numLosses: StateFlow<Int> = _numLosses
-    fun fetchNumLosses(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _numLosses.value = userDao.getNumLosses(user_ID)
-        }
-    }
-
-    private val _winnings = MutableStateFlow(0.0)
-    val winnings: StateFlow<Double> = _winnings
-    fun fetchWinnings(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _winnings.value = userDao.getWinnings(user_ID)
-        }
-    }
-
-    private val _losses = MutableStateFlow(0.0)
-    val losses: StateFlow<Double> = _losses
-    fun fetchLosses(user_ID: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _losses.value = userDao.getLosses(user_ID)
-        }
-    }
 }
 
 class DoughbagViewModelFactory(
-    private val userDao: UserDao,
-    private val skinDao: SkinDao
+    private val userDao: UserDao
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         // This MUST check for DoughbagViewModel
         if (modelClass.isAssignableFrom(DoughbagViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return DoughbagViewModel(userDao, skinDao) as T
+            return DoughbagViewModel(userDao) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

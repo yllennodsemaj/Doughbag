@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -85,12 +86,7 @@ fun DoughbagNavigation() {
 
     val userViewModel: DoughbagViewModel = viewModel(
         factory = DoughbagViewModelFactory(
-            userDao = database.userDao(),
-            skinDao = database.skinDao()
-        )
-    )
-    val skinViewModel: SkinViewModel = viewModel(
-        factory = SkinViewModel.SkinViewModelFactory(database.skinDao())
+            userDao = database.userDao())
     )
 
     NavHost(navController = navController, startDestination = "home") {
@@ -102,14 +98,14 @@ fun DoughbagNavigation() {
         composable("roulette") { Roulette(navController, userViewModel) }
         composable("craps") { Craps(navController, userViewModel) }
         composable("slots") { Slots(navController, userViewModel) }
-        composable("shop") { Shop(navController,userViewModel, skinViewModel) }
-        composable("inventory") { Inventory(navController, userViewModel, skinViewModel) }
+        composable("shop") { Shop(navController, userViewModel) }
+        composable("inventory") { Inventory(navController, userViewModel) }
         composable("stats") { Statistics(navController, userViewModel) }
     }
 }
 // helper function for screen orientation
 fun Context.findActivity(): Activity? {
-    var currentContext = this
+    var currentContext = this // this ia AI generated
     while (currentContext is ContextWrapper) {
         if (currentContext is Activity) return currentContext
         currentContext = currentContext.baseContext
@@ -277,7 +273,7 @@ fun Play(navController: NavController) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.roulette_icon),
+                    painter = painterResource(id = R.drawable.pretty_roulette),
                     contentDescription = "Play roulette",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
@@ -390,6 +386,15 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
         23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26)
     val wheel = mutableListOf(Pocket(0, "Green"))
 
+    val wheelSkin = remember(liveUser?.activeSkins) {
+        val defaultSkin = Skin.masterSkinList.masterSkinList.getOrNull(1) as? Skin.WheelSkin
+            ?: Skin.masterSkinList.masterSkinList.first { it is Skin.WheelSkin } as Skin.WheelSkin
+
+        val skinIds = liveUser?.activeSkins?.split(",")?.mapNotNull { it.toIntOrNull() }
+        val diceSkinID = skinIds?.getOrNull(0) ?: 0
+        Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.WheelSkin ?: defaultSkin
+    }
+
     for(i in 1..<wheelNumbers.size step 2)
     {
         wheel += Pocket(wheelNumbers[i], "Red")
@@ -446,7 +451,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                 Text(spinResult)
                 Text(winStatusText)
                 Image(
-                    painter = painterResource(R.drawable.roulette),
+                    painter = painterResource(wheelSkin.wheelRes),
                     contentDescription = "wheel",
                     modifier = Modifier.size(200.dp)
                 )
@@ -479,7 +484,7 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                         return@Button
                     }
                     // if there's a number bet and num not between 1 and 36 cant bet
-                    if ( bet > 0 && numTarget !in -1..36 ) {
+                    if ( bet > 0 && numTarget !in 0..36 ) {
                         Toast.makeText(context, "Invalid roulette number!", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
@@ -816,13 +821,22 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
         println("no active user")
         navController.navigate("chooseUser")
     }
-    // praise AI
-    val hearts = SlotCard(1, R.drawable.heart)
-    val diamonds = SlotCard(2, R.drawable.diamond)
-    val clubs = SlotCard(3, R.drawable.clover)
-    val spades = SlotCard(4, R.drawable.spade)
-    val seven = SlotCard(5, R.drawable.seven)
-    val jackpot = SlotCard(6, R.drawable.jackpot)
+
+    val slotSkin = remember(user?.activeSkins) {
+        val defaultSkin = Skin.masterSkinList.masterSkinList.getOrNull(1) as? Skin.SlotSkin
+            ?: Skin.masterSkinList.masterSkinList.first { it is Skin.SlotSkin } as Skin.SlotSkin
+
+        val skinIds = user?.activeSkins?.split(",")?.mapNotNull { it.toIntOrNull() }
+        val diceSkinID = skinIds?.getOrNull(2) ?: 2
+        Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.SlotSkin ?: defaultSkin
+    }
+
+    val hearts = SlotCard(1, slotSkin.heart)
+    val diamonds = SlotCard(2, slotSkin.diamond)
+    val clubs = SlotCard(3, slotSkin.club)
+    val spades = SlotCard(4, slotSkin.clover)
+    val seven = SlotCard(5, slotSkin.seven)
+    val jackpot = SlotCard(6, slotSkin.jack)
 
     val slots = listOf(
         hearts, hearts, hearts, hearts, hearts, hearts,
@@ -831,12 +845,13 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
         seven, seven, jackpot
     )
 
-    var slot1 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.clover)) }
-    var slot2 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.heart)) }
-    var slot3 : SlotCard by remember { mutableStateOf(SlotCard(1, R.drawable.spade)) }
+    var slot1 : SlotCard by remember { mutableStateOf(SlotCard(1, slotSkin.club)) }
+    var slot2 : SlotCard by remember { mutableStateOf(SlotCard(1, slotSkin.heart)) }
+    var slot3 : SlotCard by remember { mutableStateOf(SlotCard(1, slotSkin.clover)) }
 
     var bet by remember { mutableStateOf("10") }
     var winStatusText by remember { mutableStateOf("") }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -1009,31 +1024,53 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
     val context = LocalContext.current
     val allUsers by viewModel.userList.collectAsState()
     val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
+
+    LaunchedEffect(user?.activeSkins) {
+        println("Current skins = ${user?.activeSkins}")
+    }
+
     var balance = user?.balance ?: 0.0
     if(user == null) {
         println("no active user")
         navController.navigate("chooseUser")
     }
+    else {
 
     var diceResult1 by remember { mutableIntStateOf(1) }
     var diceResult2 by remember { mutableIntStateOf(2) }
 
+    val diceSkin = remember(user.activeSkins) {
+        val defaultSkin = Skin.masterSkinList.masterSkinList.getOrNull(1) as? Skin.DiceSkin
+            ?: Skin.masterSkinList.masterSkinList.first { it is Skin.DiceSkin } as Skin.DiceSkin
+
+        val skinIds = user.activeSkins.split(",").mapNotNull { it.toIntOrNull() }
+        val diceSkinID = skinIds.getOrNull(1) ?: 1
+        Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.DiceSkin ?: defaultSkin
+    }
+
+//    val diceSkin = remember(user.activeSkins) {
+//        val skins = user.activeSkins.split(",").map { it.toInt() }
+//
+//
+//        Skin.masterSkinList.masterSkinList[skins[1]] as Skin.DiceSkin
+//    }
+
     val imageResource1 = when (diceResult1) {
-        1 -> R.drawable.dice_1
-        2 -> R.drawable.dice_2
-        3 -> R.drawable.dice_3
-        4 -> R.drawable.dice_4
-        5 -> R.drawable.dice_5
-        else -> R.drawable.dice_6
+        1 -> diceSkin.dice1
+        2 -> diceSkin.dice2
+        3 -> diceSkin.dice3
+        4 -> diceSkin.dice4
+        5 -> diceSkin.dice5
+        else -> diceSkin.dice6
     }
 
     val imageResource2 = when (diceResult2) {
-        1 -> R.drawable.dice_1
-        2 -> R.drawable.dice_2
-        3 -> R.drawable.dice_3
-        4 -> R.drawable.dice_4
-        5 -> R.drawable.dice_5
-        else -> R.drawable.dice_6
+        1 -> diceSkin.dice1
+        2 -> diceSkin.dice2
+        3 -> diceSkin.dice3
+        4 -> diceSkin.dice4
+        5 -> diceSkin.dice5
+        else -> diceSkin.dice6
     }
 
     var bet by remember { mutableStateOf("10") }
@@ -1074,147 +1111,152 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
         modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = winStatusText,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF4CAF50),
-            modifier = Modifier.height(30.dp)
-        )
-
-        OutlinedTextField(
-            value = bet,
-            onValueChange = { bet = it },
-            label = { Text("Bet") },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
-            ),
-            modifier = Modifier.padding(5.dp),
-            // force number pad
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done // bottom right key = done
-            ),
-            // collapse keyboard on done click
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    keyboardController?.hide()
-                }
-            )
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
-        {
-            Image(
-                painter = painterResource(imageResource1),
-                contentDescription = "dice 1",
-                modifier = Modifier.size(100.dp)
+            Text(
+                text = winStatusText,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4CAF50),
+                modifier = Modifier.height(30.dp)
             )
 
-            Image(
-                painter = painterResource(imageResource2),
-                contentDescription = "dice 2",
-                modifier = Modifier.size(100.dp)
+            OutlinedTextField(
+                value = bet,
+                onValueChange = { bet = it },
+                label = { Text("Bet") },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
+                modifier = Modifier.padding(5.dp),
+                // force number pad
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done // bottom right key = done
+                ),
+                // collapse keyboard on done click
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                )
             )
 
-            var isFirstClick by remember { mutableStateOf(true) }
-            var pointValue by remember { mutableIntStateOf(0) }
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Button(onClick = {
-                if (user == null) return@Button
-                else {
-                    winStatusText = ""
-                    diceResult1 = CasinoRng.nextInt(1, 6)
-                    diceResult2 = CasinoRng.nextInt(1, 6)
-                    val myBet = bet.toDoubleOrNull() ?: 0.0
-                    val sum = diceResult1 + diceResult2
+            Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
+            {
+                Image(
+                    painter = painterResource(imageResource1),
+                    contentDescription = "dice 1",
+                    modifier = Modifier.size(100.dp)
+                )
 
-                    if (isFirstClick) { // initial roll
-                        if (myBet < 10.0) {
-                            Toast.makeText(context, "Minimum bet $10",
-                                Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        if (myBet > balance) {
-                            Toast.makeText(context, "Insufficient funds",
-                                Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        if (!bet(myBet, viewModel)) {
-                            Toast.makeText(
-                                context, "Can't bet this",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@Button
-                        }
-                        balance -= myBet * 1.0
-                        viewModel.updateBalance(user.user_ID, balance)
-                        when (sum) {
-                            7, 11 -> {
-                                val win: Double = myBet * 2.0
-                                balance += win
-                                viewModel.updateBalance(user.user_ID, balance)
-                                viewModel.updateStats(
-                                    userId = user.user_ID, wins = 1, winnings = win,
-                                    cWins = 1
-                                )
-                                winStatusText = "You won: $win! Play again?"
-                                isFirstClick = true
+                Image(
+                    painter = painterResource(imageResource2),
+                    contentDescription = "dice 2",
+                    modifier = Modifier.size(100.dp)
+                )
+
+                var isFirstClick by remember { mutableStateOf(true) }
+                var pointValue by remember { mutableIntStateOf(0) }
+
+                Button(onClick = {
+                    if (user == null) return@Button
+                    else {
+                        winStatusText = ""
+                        diceResult1 = CasinoRng.nextInt(1, 6)
+                        diceResult2 = CasinoRng.nextInt(1, 6)
+                        val myBet = bet.toDoubleOrNull() ?: 0.0
+                        val sum = diceResult1 + diceResult2
+
+                        if (isFirstClick) { // initial roll
+                            if (myBet < 10.0) {
+                                Toast.makeText(
+                                    context, "Minimum bet $10",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
                             }
-
-                            2, 3, 12 -> {
-                                winStatusText = "Craps! Play again?"
-                                viewModel.updateStats(
-                                    userId = user.user_ID, losses = 1, lossAmt = myBet,
-                                    cLosses = 1
-                                )
-                                viewModel.updateBalance(user.user_ID, balance)
-                                isFirstClick = true
+                            if (myBet > balance) {
+                                Toast.makeText(
+                                    context, "Insufficient funds",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
                             }
-
-                            else -> {
-                                pointValue = sum
-                                winStatusText = "$sum wins, 7 loses. Roll again!"
-                                isFirstClick = false
+                            if (!bet(myBet, viewModel)) {
+                                Toast.makeText(
+                                    context, "Can't bet this",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
                             }
-                        }
-                    } else {
-                        when (sum) {
-                            pointValue -> {
-                                val win = myBet * 2.0
-                                balance += win
-                                viewModel.updateBalance(user.user_ID, balance)
-                                viewModel.updateStats(
-                                    userId = user.user_ID, wins = 1,
-                                    winnings = win, cWins = 1
-                                )
-                                winStatusText = "You won $win! Play again?"
-                                isFirstClick = true
-                            }
+                            balance -= myBet * 1.0
+                            viewModel.updateBalance(user.user_ID, balance)
+                            when (sum) {
+                                7, 11 -> {
+                                    val win: Double = myBet * 2.0
+                                    balance += win
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, wins = 1, winnings = win,
+                                        cWins = 1
+                                    )
+                                    winStatusText = "You won: $win! Play again?"
+                                    isFirstClick = true
+                                }
 
-                            7 -> {
-                                winStatusText = "7 loses. Play again?"
-                                viewModel.updateStats(
-                                    userId = user.user_ID, losses = 1, cLosses = 1,
-                                    lossAmt = myBet
-                                )
-                                viewModel.updateBalance(user.user_ID, balance)
-                                isFirstClick = true
-                            }
+                                2, 3, 12 -> {
+                                    winStatusText = "Craps! Play again?"
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, losses = 1, lossAmt = myBet,
+                                        cLosses = 1
+                                    )
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    isFirstClick = true
+                                }
 
-                            else -> {
-                                winStatusText = "Roll again"
+                                else -> {
+                                    pointValue = sum
+                                    winStatusText = "$sum wins, 7 loses. Roll again!"
+                                    isFirstClick = false
+                                }
+                            }
+                        } else {
+                            when (sum) {
+                                pointValue -> {
+                                    val win = myBet * 2.0
+                                    balance += win
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, wins = 1,
+                                        winnings = win, cWins = 1
+                                    )
+                                    winStatusText = "You won $win! Play again?"
+                                    isFirstClick = true
+                                }
+
+                                7 -> {
+                                    winStatusText = "7 loses. Play again?"
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, losses = 1, cLosses = 1,
+                                        lossAmt = myBet
+                                    )
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    isFirstClick = true
+                                }
+
+                                else -> {
+                                    winStatusText = "Roll again"
+                                }
                             }
                         }
                     }
+                }) {
+                    Text(text = stringResource(R.string.rollBtnTxt))
                 }
-            }) {
-                Text(text = stringResource(R.string.rollBtnTxt))
             }
         }
     }
@@ -1251,71 +1293,48 @@ fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
     }
 }
 
+// not yet implemented
 @Composable
-fun Shop(
-
-    navController: NavController,
-    userViewModel: DoughbagViewModel,
-    skinViewModel: SkinViewModel
-) {
+fun Shop(navController: NavController, userViewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     val currentUser = userViewModel.activeUser
-    LaunchedEffect(currentUser) {
-        currentUser?.let { skinViewModel.loadSkinsForUser(it.user_ID) }
-    }
-    // Observe ONLY the shop skins
-    val shopSkins by skinViewModel.shopSkins.collectAsState()
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Skin Shop", fontSize = 24.sp)
-        LazyColumn {
-            items(shopSkins) { skin ->
-                Button(onClick = {
-                    println("Triggering purchase logic for ${skin.skinName}")
-                }) {
-                    Text("Buy ${skin.skinName} for $${skin.skinPrice}")
-                }
-            }
 
-        }
-        Button(onClick = { navController.navigate("play") }) { Text("Go back") }
-    }
 }
 
 @Composable
-fun Inventory(
-    navController: NavController,
-    userViewModel: DoughbagViewModel, // Handles user balance, ID, auth state
-    skinViewModel: SkinViewModel  // Handles available skins, active skin
-) {
+fun Inventory(navController: NavController, viewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    val currentUser = userViewModel.activeUser // Assuming you have access to this
+    val user = viewModel.activeUser
+    val allSkins: List<Skin>
+    val userOwnedIds: List<Int>
+    val myOwnedSkins: List<Skin>
+    if(user == null) {
+        navController.navigate("chooseUser")
+    } else {
+        allSkins = Skin.masterSkinList.masterSkinList
+        //userOwnedIds = allSkins
+        myOwnedSkins = allSkins
+        // filters user owned skins for inventory view
 
-    // Tell ViewModel to load this user's data
-    LaunchedEffect(currentUser) {
-        currentUser?.let { skinViewModel.loadSkinsForUser(it.user_ID) }
-    }
-
-    // Observe ONLY the inventory skins
-    val mySkins by skinViewModel.inventorySkins.collectAsState()
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("My Inventory", fontSize = 24.sp)
-
-        LazyColumn {
-            items(mySkins) { skin ->
-                Button(onClick = {
-                    skinViewModel.setActiveSkin(skin)
-                    navController.navigate("play")
-                }) {
-                    Text("Equip ${skin.skinName}")
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("My Inventory", fontSize = 24.sp)
+            LazyColumn {
+                items(myOwnedSkins) { skin ->
+                    Button(onClick = {
+                        viewModel.setActiveSkin(user, skin)
+                        navController.navigate("play")
+                    },
+                        modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)) {
+                        Text("Equip ${skin.skinName}")
+                    }
                 }
             }
         }
     }
+
+
 }
