@@ -395,10 +395,10 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
         Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.WheelSkin ?: defaultSkin
     }
 
-    for(i in 1..wheelNumbers.size step 2)
+    for(i in 1..<wheelNumbers.size step 2)
     {
-        wheel += Pocket(i, "Red")
-        wheel += Pocket(i + 1, "Black")
+        wheel += Pocket(wheelNumbers[i], "Red")
+        wheel += Pocket(wheelNumbers[i + 1], "Black")
     }
 
     Box(
