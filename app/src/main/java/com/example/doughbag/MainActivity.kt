@@ -390,10 +390,10 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
         23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26)
     val wheel = mutableListOf(Pocket(0, "Green"))
 
-    for(i in 1..wheelNumbers.size step 2)
+    for(i in 1..<wheelNumbers.size step 2)
     {
-        wheel += Pocket(i, "Red")
-        wheel += Pocket(i + 1, "Black")
+        wheel += Pocket(wheelNumbers[i], "Red")
+        wheel += Pocket(wheelNumbers[i + 1], "Black")
     }
 
     Box(
