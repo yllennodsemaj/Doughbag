@@ -128,15 +128,23 @@ fun SetScreenOrientation(orientation: Int) {
 @Composable //home page; viewed on load
 fun HomeScreen(navController: NavController) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Next stop: rock bottom", fontSize = 32.sp)
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = { navController.navigate("chooseUser") }) {
-            Text("Play")
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.landing_page),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Next stop: rock bottom", fontSize = 32.sp, color = Color.White, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = { navController.navigate("chooseUser") }) {
+                Text("Play")
+            }
         }
     }
 }
@@ -145,32 +153,40 @@ fun HomeScreen(navController: NavController) {
 fun CreateUser(navController: NavController, viewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     var userNameInput by remember { mutableStateOf("") }
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        OutlinedTextField(
-            value = userNameInput,
-            onValueChange = { userNameInput = it },
-            label = { Text("Username") },
-            placeholder = { Text("Enter a name") },
-            singleLine = true,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
-            ),
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.blue_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            if (userNameInput.isNotBlank()) {
-                viewModel.createNewUser(userNameInput) // save to database
-                navController.navigate("chooseUser")
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            OutlinedTextField(
+                value = userNameInput,
+                onValueChange = { userNameInput = it },
+                label = { Text("Username") },
+                placeholder = { Text("Enter a name") },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                if (userNameInput.isNotBlank()) {
+                    viewModel.createNewUser(userNameInput) // save to database
+                    navController.navigate("chooseUser")
+                }
+            }) {
+                Text("Create!")
             }
-        }) {
-            Text("Create!")
         }
     }
 }
@@ -178,33 +194,40 @@ fun CreateUser(navController: NavController, viewModel: DoughbagViewModel) {
 @Composable
 fun DeleteUser(navController: NavController, viewModel: DoughbagViewModel){
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.blue_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
         Column(
             modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             val user = viewModel.activeUser
-            if(user != null) {
-                Text("Delete ${user.user_name}?")
+            if (user != null) {
+                Text("Delete ${user.user_name}?", color = Color.White, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(32.dp))
-                Button(onClick = {
+                Button(
+                    onClick = {
                         viewModel.deleteUser(user) // delete the active user
                         navController.navigate("chooseUser")
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFD32F2F),
-                        contentColor = Color.White)
+                        contentColor = Color.White
+                    )
                 ) {
                     Text("Delete")
                 }
-            }
-
-            else {
+            } else {
                 Text("No active user!")
             }
             Spacer(modifier = Modifier.height(32.dp))
             Button(onClick = { navController.navigate("chooseUser") }) { Text("Cancel") }
         }
+    }
 }
 
 
@@ -213,35 +236,42 @@ fun ChooseUser(navController: NavController, viewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     // listens for new users
     val userList by viewModel.userList.collectAsState()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.blue_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Select a Player", fontSize = 28.sp, modifier = Modifier.padding(bottom = 24.dp), color = Color.White, fontWeight = FontWeight.Bold)
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Select a Player", fontSize = 28.sp, modifier = Modifier.padding(bottom = 24.dp))
-
-        // Loop through users and create a button for each one
-        userList.forEach { user ->
-            Button(
-                onClick = {
-                    viewModel.setActiveUser(user) // from here on this user is "active"
-                    navController.navigate("play")
-                },
-                modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)
-            ) {
-                Text("${user.user_name}  $${user.balance}")
+            // Loop through users and create a button for each one
+            userList.forEach { user ->
+                Button(
+                    onClick = {
+                        viewModel.setActiveUser(user) // from here on this user is "active"
+                        navController.navigate("play")
+                    },
+                    modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)
+                ) {
+                    Text("${user.user_name}  $${user.balance}")
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Button(onClick = { navController.navigate("createUser") }) {
-            Text("Create New User")
-        }
-        if(viewModel.activeUser != null) {
-            Button(onClick = { navController.navigate("deleteUser") }) {
-                Text("Delete User")
+            Button(onClick = { navController.navigate("createUser") }) {
+                Text("Create New User")
+            }
+            if (viewModel.activeUser != null) {
+                Button(onClick = { navController.navigate("deleteUser") }) {
+                    Text("Delete User")
+                }
             }
         }
     }
@@ -250,39 +280,47 @@ fun ChooseUser(navController: NavController, viewModel: DoughbagViewModel) {
 @Composable // after choosing a user, select a game to play, or shop, inventory, or go back home
 fun Play(navController: NavController) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Row(
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.menu3_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            // Roulette button
-            Column(
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clickable { navController.navigate("roulette") },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .fillMaxWidth()
+                    .height(120.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.pretty_roulette),
-                    contentDescription = "Play roulette",
-                    contentScale = ContentScale.Fit,
+                // Roulette button
+                Column(
                     modifier = Modifier
-                        .weight(1.2f)
-                        .fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Roulette", fontSize = 16.sp)
-            }
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable { navController.navigate("roulette") },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.roulette),
+                        contentDescription = "Play roulette",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Roulette", fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                }
                 // Craps button
                 Column(
                     modifier = Modifier
@@ -301,41 +339,48 @@ fun Play(navController: NavController) {
                             .fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Craps", fontSize = 16.sp)
+                    Text(text = "Craps", fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.Bold)
                 }
-                    // Slots button
-                    Column(
+                // Slots button
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable { navController.navigate("slots") },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.slots_icon),
+                        contentDescription = "Play slots",
+                        contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight()
-                            .clickable { navController.navigate("slots") },
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.slots_icon),
-                            contentDescription = "Play slots",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "Slots", fontSize = 16.sp)
-                    }
+                            .fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Slots", fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.Bold)
                 }
+            }
 
 
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button(onClick = { navController.navigate("stats") }) { Text("View Stats") }
-            Button(onClick = { navController.navigate("inventory") }) { Text("Inventory") }
-            Button(onClick = { navController.navigate("shop") }) { Text("Shop") }
-        }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(onClick = { navController.navigate("stats") }) { Text("View Stats") }
+                Button(onClick = { navController.navigate("inventory") }) { Text("Inventory") }
+                Button(onClick = { navController.navigate("shop") }) { Text("Shop") }
+            }
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button(onClick = { navController.navigate("chooseUser") }) { Text("Back to Users") }
-            Button(onClick = { navController.navigate("deleteUser") }) { Text("Delete User") }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(onClick = { navController.navigate("chooseUser") }) { Text("Back to Users") }
+                Button(onClick = { navController.navigate("deleteUser") }) { Text("Delete User") }
+            }
         }
     }
 }
@@ -401,364 +446,398 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
         wheel += Pocket(wheelNumbers[i + 1], "Black")
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(12.dp) // Gives safe margins on all edges of the screen
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.casino_green),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
         Box(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Balance: ",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
-                Spacer(modifier = Modifier.width(4.dp)) // Changed from height to width for horizontal alignment
-                Text(
-                    text = "$$thisGameBalance",
-                    color = Color(0xFF2E7D32),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        Button(
-            onClick = { navController.navigate("play") },
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            Text("Exit game")
-        }
-
-        Row(
-            modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 50.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(12.dp) // Gives safe margins on all edges of the screen
         ) {
-
-            Column(
-                modifier = Modifier.weight(1.1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text(spinResult)
-                Text(winStatusText)
-                Image(
-                    painter = painterResource(wheelSkin.wheelRes),
-                    contentDescription = "wheel",
-                    modifier = Modifier.size(200.dp)
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Button(onClick = {
-                    // type checks all user inputs and converts strings to number or null
-                    val numTarget = myNumber.toIntOrNull() ?: 0
-                    val bet = betNumber.toDoubleOrNull() ?: 0.0
-                    val redBet = betRed.toDoubleOrNull() ?: 0.0
-                    val blackBet = betBlack.toDoubleOrNull() ?: 0.0
-                    val oddBet = betOdd.toDoubleOrNull() ?: 0.0
-                    val evenBet = betEven.toDoubleOrNull() ?: 0.0
-                    val highBet = betHigh.toDoubleOrNull() ?: 0.0
-                    val lowBet = betLow.toDoubleOrNull() ?: 0.0
-                    val myBet = (bet + redBet + blackBet + highBet + lowBet + oddBet + evenBet) * 1.0
-                    spinResult = "Spin to win"
-                    winStatusText = ""
-                    // bet too low
-                    if (myBet < 10.0) {
-                        Toast.makeText(context, "Minimum bet is $10!",
-                            Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    // bet more than balance
-                    if (!bet(myBet, viewModel)) {
-                        Toast.makeText(context, "Insufficient funds!",
-                            Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    // if there's a number bet and num not between 1 and 36 cant bet
-                    if ( bet > 0 && numTarget !in 0..36 ) {
-                        Toast.makeText(context, "Invalid roulette number!", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    thisGameBalance -= myBet
-                        // first subtract total bets from balance
-                    val winningPocket = wheel[CasinoRng.nextInt(0, wheel.size)]
-                    spinResult = "The ball landed on: ${winningPocket.myId} ${winningPocket.myColor}"
-                        // get winning result
-                    if(liveUser != null) {
-                        var win = 0.0
-
-                    if (winningPocket.myId == numTarget) { //
-                        win += bet * 36
-                        viewModel.updateStats(
-                            liveUser.user_ID, wins = 1, rWins = 1,
-                            winnings = bet * 36)}
-                    else if(bet > 0){
-                        viewModel.updateStats(
-                            liveUser.user_ID, losses = 1, rLosses = 1,
-                            lossAmt = bet)
-                    }
-                    if (winningPocket.myColor == "Red") {
-                        win += redBet * 2
-                        viewModel.updateStats(
-                            liveUser.user_ID, wins = 1, rWins = 1,
-                            winnings = redBet * 2)}
-                    else if(redBet > 0){
-                        viewModel.updateStats(
-                            liveUser.user_ID, losses = 1, rLosses = 1,
-                            lossAmt = redBet)
-                    }
-                    if (winningPocket.myColor == "Black") {
-                        win += blackBet * 2
-                        viewModel.updateStats(
-                            liveUser.user_ID, wins = 1, rWins = 1,
-                            winnings = blackBet * 2)}
-                    else if(blackBet > 0){
-                        viewModel.updateStats(
-                            liveUser.user_ID, losses = 1, rLosses = 1,
-                            lossAmt = blackBet)
-                    }
-                    // Zero is not even, odd, high, or low in roulette
-                    if (winningPocket.myId == 0){
-                        winStatusText = "You lost"
-                        viewModel.updateStats(liveUser.user_ID, losses = 1, rLosses = 1, lossAmt = myBet)
-                    }
-                    else {
-                        if (winningPocket.myId % 2 == 1) {
-                            win += oddBet * 2
-                            viewModel.updateStats(
-                                liveUser.user_ID, wins = 1, rWins = 1,
-                                winnings = oddBet * 2
-                            )
-                        } else if(oddBet > 0){
-                            viewModel.updateStats(
-                                liveUser.user_ID, losses = 1, rLosses = 1,
-                                lossAmt = oddBet
-                            )
-                        }
-                        if (winningPocket.myId % 2 == 0) {
-                            win += evenBet * 2
-                            viewModel.updateStats(
-                                liveUser.user_ID, wins = 1, rWins = 1,
-                                winnings = evenBet * 2
-                            )
-                        } else if(evenBet > 0){
-                            viewModel.updateStats(
-                                liveUser.user_ID, losses = 1, rLosses = 1,
-                                lossAmt = evenBet
-                            )
-                        }
-                        if (winningPocket.myId in 1..18) {
-                            win += lowBet * 2
-                            viewModel.updateStats(
-                                liveUser.user_ID, wins = 1, rWins = 1,
-                                winnings = lowBet * 2
-                            )
-                        } else if(lowBet > 0){
-                            viewModel.updateStats(
-                                liveUser.user_ID, losses = 1, rLosses = 1,
-                                lossAmt = lowBet
-                            )
-                        }
-                        if (winningPocket.myId in 19..36) {
-                            win += highBet * 2
-                            viewModel.updateStats(
-                                liveUser.user_ID, wins = 1, rWins = 1,
-                                winnings = highBet * 2
-                            )
-                        } else if(highBet > 0){
-                            viewModel.updateStats(
-                                liveUser.user_ID, losses = 1, rLosses = 1,
-                                lossAmt = highBet
-                            )
-                        }
-                        winStatusText = if(win > 0) {
-                            "You won $$win!"
-                        } else{
-                            "You lost."
-                        }
-                        thisGameBalance += win
-                        viewModel.updateBalance(liveUser.user_ID, thisGameBalance)
-                    }
-                    }
-
-                }) {
-                    Text(text = stringResource(R.string.spinBtnTxt))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Balance: ",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.width(4.dp)) // Changed from height to width for horizontal alignment
+                    Text(
+                        text = "$$thisGameBalance",
+                        color = Color(0xFF2E7D32),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .weight(0.9f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Button(
+                onClick = { navController.navigate("play") },
+                modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                val fieldModifier = Modifier
-                    .height(70.dp)
-                    .fillMaxWidth()
+                Text("Exit game")
+            }
 
-                val textColors = TextFieldDefaults.colors(
-                    focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.Black,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 50.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
-                val textColors2 = TextFieldDefaults.colors(
-                    focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.Black,
-                    focusedContainerColor = Color.Gray,
-                    unfocusedContainerColor = Color.Gray,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                )
+                Column(
+                    modifier = Modifier.weight(1.1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text = spinResult, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(text = winStatusText, color = Color.White, fontWeight = FontWeight.Bold)
+                    Image(
+                        painter = painterResource(wheelSkin.wheelRes),
+                        contentDescription = "wheel",
+                        modifier = Modifier.size(200.dp)
+                    )
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Column(modifier = Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = myNumber,
-                            onValueChange = { myNumber = it },
-                            label = { Text("My Number", fontSize = 12.sp) },
-                            colors = textColors2,
-                            modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    keyboardController?.hide()
-                                }
-                            )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                        )
-                        OutlinedTextField(
-                            value = betNumber,
-                            onValueChange = { betNumber = it },
-                            label = { Text("Bet on Number", fontSize = 12.sp) },
-                            colors = textColors,
-                            modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    keyboardController?.hide()
+                    Button(onClick = {
+                        // type checks all user inputs and converts strings to number or null
+                        val numTarget = myNumber.toIntOrNull() ?: 0
+                        val bet = betNumber.toDoubleOrNull() ?: 0.0
+                        val redBet = betRed.toDoubleOrNull() ?: 0.0
+                        val blackBet = betBlack.toDoubleOrNull() ?: 0.0
+                        val oddBet = betOdd.toDoubleOrNull() ?: 0.0
+                        val evenBet = betEven.toDoubleOrNull() ?: 0.0
+                        val highBet = betHigh.toDoubleOrNull() ?: 0.0
+                        val lowBet = betLow.toDoubleOrNull() ?: 0.0
+                        val myBet =
+                            (bet + redBet + blackBet + highBet + lowBet + oddBet + evenBet) * 1.0
+                        spinResult = "Spin to win"
+                        winStatusText = ""
+                        // bet too low
+                        if (myBet < 10.0) {
+                            Toast.makeText(
+                                context, "Minimum bet is $10!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+                        // bet more than balance
+                        if (!bet(myBet, viewModel)) {
+                            Toast.makeText(
+                                context, "Insufficient funds!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+                        // if there's a number bet and num not between 1 and 36 cant bet
+                        if (bet > 0 && numTarget !in 0..36 || myNumber.toIntOrNull() == null) {
+                            Toast.makeText(context, "Invalid roulette number!", Toast.LENGTH_SHORT)
+                                .show()
+                            return@Button
+                        }
+                        thisGameBalance -= myBet
+                        // first subtract total bets from balance
+                        val winningPocket = wheel[CasinoRng.nextInt(0, wheel.size)]
+                        spinResult =
+                            "The ball landed on: ${winningPocket.myId} ${winningPocket.myColor}"
+                        // get winning result
+                        if (liveUser != null) {
+                            var win = 0.0
+
+                            if (winningPocket.myId == numTarget) { //
+                                win += bet * 36
+                                viewModel.updateStats(
+                                    liveUser.user_ID, wins = 1, rWins = 1,
+                                    winnings = bet * 36
+                                )
+                            } else if (bet > 0) {
+                                viewModel.updateStats(
+                                    liveUser.user_ID, losses = 1, rLosses = 1,
+                                    lossAmt = bet
+                                )
+                            }
+                            if (winningPocket.myColor == "Red") {
+                                win += redBet * 2
+                                viewModel.updateStats(
+                                    liveUser.user_ID, wins = 1, rWins = 1,
+                                    winnings = redBet * 2
+                                )
+                            } else if (redBet > 0) {
+                                viewModel.updateStats(
+                                    liveUser.user_ID, losses = 1, rLosses = 1,
+                                    lossAmt = redBet
+                                )
+                            }
+                            if (winningPocket.myColor == "Black") {
+                                win += blackBet * 2
+                                viewModel.updateStats(
+                                    liveUser.user_ID, wins = 1, rWins = 1,
+                                    winnings = blackBet * 2
+                                )
+                            } else if (blackBet > 0) {
+                                viewModel.updateStats(
+                                    liveUser.user_ID, losses = 1, rLosses = 1,
+                                    lossAmt = blackBet
+                                )
+                            }
+                            // Zero is not even, odd, high, or low in roulette
+                            if (winningPocket.myId == 0) {
+                                winStatusText = "You lost"
+                                viewModel.updateStats(
+                                    liveUser.user_ID,
+                                    losses = 1,
+                                    rLosses = 1,
+                                    lossAmt = myBet
+                                )
+                            } else {
+                                if (winningPocket.myId % 2 == 1) {
+                                    win += oddBet * 2
+                                    viewModel.updateStats(
+                                        liveUser.user_ID, wins = 1, rWins = 1,
+                                        winnings = oddBet * 2
+                                    )
+                                } else if (oddBet > 0) {
+                                    viewModel.updateStats(
+                                        liveUser.user_ID, losses = 1, rLosses = 1,
+                                        lossAmt = oddBet
+                                    )
                                 }
-                            )
-                        )
-                        OutlinedTextField(
-                            value = betRed,
-                            onValueChange = { betRed = it },
-                            label = { Text("Bet on Red", fontSize = 12.sp) },
-                            colors = textColors,
-                            modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    keyboardController?.hide()
+                                if (winningPocket.myId % 2 == 0) {
+                                    win += evenBet * 2
+                                    viewModel.updateStats(
+                                        liveUser.user_ID, wins = 1, rWins = 1,
+                                        winnings = evenBet * 2
+                                    )
+                                } else if (evenBet > 0) {
+                                    viewModel.updateStats(
+                                        liveUser.user_ID, losses = 1, rLosses = 1,
+                                        lossAmt = evenBet
+                                    )
                                 }
-                            )
-                        )
-                        OutlinedTextField(
-                            value = betBlack,
-                            onValueChange = { betBlack = it },
-                            label = { Text("Bet on Black", fontSize = 12.sp) },
-                            colors = textColors,
-                            modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    keyboardController?.hide()
+                                if (winningPocket.myId in 1..18) {
+                                    win += lowBet * 2
+                                    viewModel.updateStats(
+                                        liveUser.user_ID, wins = 1, rWins = 1,
+                                        winnings = lowBet * 2
+                                    )
+                                } else if (lowBet > 0) {
+                                    viewModel.updateStats(
+                                        liveUser.user_ID, losses = 1, rLosses = 1,
+                                        lossAmt = lowBet
+                                    )
                                 }
-                            )
-                        )
+                                if (winningPocket.myId in 19..36) {
+                                    win += highBet * 2
+                                    viewModel.updateStats(
+                                        liveUser.user_ID, wins = 1, rWins = 1,
+                                        winnings = highBet * 2
+                                    )
+                                } else if (highBet > 0) {
+                                    viewModel.updateStats(
+                                        liveUser.user_ID, losses = 1, rLosses = 1,
+                                        lossAmt = highBet
+                                    )
+                                }
+                                winStatusText = if (win > 0) {
+                                    "You won $$win!"
+                                } else {
+                                    "You lost."
+                                }
+                                thisGameBalance += win
+                                viewModel.updateBalance(liveUser.user_ID, thisGameBalance)
+                            }
+                        }
+
+                    }) {
+                        Text(text = stringResource(R.string.spinBtnTxt))
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Column(modifier = Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = betOdd,
-                            onValueChange = { betOdd = it },
-                            label = { Text("Bet on Odd", fontSize = 12.sp) },
-                            colors = textColors,
-                            modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    keyboardController?.hide()
-                                }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(0.9f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val fieldModifier = Modifier
+                        .height(70.dp)
+                        .fillMaxWidth()
+
+                    val textColors = TextFieldDefaults.colors(
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
+
+                    val textColors2 = TextFieldDefaults.colors(
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.Black,
+                        focusedContainerColor = Color.Gray,
+                        unfocusedContainerColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = myNumber,
+                                onValueChange = { myNumber = it },
+                                label = { Text("My Number", fontSize = 12.sp) },
+                                colors = textColors2,
+                                modifier = fieldModifier,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                )
+
                             )
-                        )
-                        OutlinedTextField(
-                            value = betEven,
-                            onValueChange = { betEven = it },
-                            label = { Text("Bet on Even", fontSize = 12.sp) },
-                            colors = textColors,
-                            modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    keyboardController?.hide()
-                                }
+                            OutlinedTextField(
+                                value = betNumber,
+                                onValueChange = { betNumber = it },
+                                label = { Text("Bet on Number", fontSize = 12.sp) },
+                                colors = textColors,
+                                modifier = fieldModifier,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                )
                             )
-                        )
-                        OutlinedTextField(
-                            value = betLow,
-                            onValueChange = { betLow = it },
-                            label = { Text("Bet on 1 to 18", fontSize = 12.sp) },
-                            colors = textColors,
-                            modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    keyboardController?.hide()
-                                }
+                            OutlinedTextField(
+                                value = betRed,
+                                onValueChange = { betRed = it },
+                                label = { Text("Bet on Red", fontSize = 12.sp) },
+                                colors = textColors,
+                                modifier = fieldModifier,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                )
                             )
-                        )
-                        OutlinedTextField(
-                            value = betHigh,
-                            onValueChange = { betHigh = it },
-                            label = { Text("Bet on 19 to 36", fontSize = 12.sp) },
-                            colors = textColors,
-                            modifier = fieldModifier,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    keyboardController?.hide()
-                                }
+                            OutlinedTextField(
+                                value = betBlack,
+                                onValueChange = { betBlack = it },
+                                label = { Text("Bet on Black", fontSize = 12.sp) },
+                                colors = textColors,
+                                modifier = fieldModifier,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                )
                             )
-                        )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = betOdd,
+                                onValueChange = { betOdd = it },
+                                label = { Text("Bet on Odd", fontSize = 12.sp) },
+                                colors = textColors,
+                                modifier = fieldModifier,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                )
+                            )
+                            OutlinedTextField(
+                                value = betEven,
+                                onValueChange = { betEven = it },
+                                label = { Text("Bet on Even", fontSize = 12.sp) },
+                                colors = textColors,
+                                modifier = fieldModifier,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                )
+                            )
+                            OutlinedTextField(
+                                value = betLow,
+                                onValueChange = { betLow = it },
+                                label = { Text("Bet on 1 to 18", fontSize = 12.sp) },
+                                colors = textColors,
+                                modifier = fieldModifier,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                )
+                            )
+                            OutlinedTextField(
+                                value = betHigh,
+                                onValueChange = { betHigh = it },
+                                label = { Text("Bet on 19 to 36", fontSize = 12.sp) },
+                                colors = textColors,
+                                modifier = fieldModifier,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -852,145 +931,157 @@ fun Slots(navController: NavController, viewModel: DoughbagViewModel) {
     var bet by remember { mutableStateOf("10") }
     var winStatusText by remember { mutableStateOf("") }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(12.dp) // Gives safe margins on all edges of the screen
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.green_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
         Box(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
-                .padding(10.dp),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(12.dp) // Gives safe margins on all edges of the screen
         ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
+                    .padding(10.dp),
+                contentAlignment = Alignment.Center
+            ) {
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "  Balance: ",
-                    color = Color.Gray,
-                    fontSize = 15.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "$$balance",
-                    color = Color(0xFF2E7D32),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "  Balance: ",
+                        color = Color.Gray,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "$$balance",
+                        color = Color(0xFF2E7D32),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
             }
-
-        }
-        Button( // back to play screen
-            onClick = { navController.navigate("play") },
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) { Text("Exit game") }
-        Column(
-            modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = winStatusText,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF4CAF50),
-                modifier = Modifier.height(30.dp)
-            )
-            OutlinedTextField(
-                value = bet,
-                onValueChange = { bet = it },
-                label = { Text("Bet") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal, // Allows decimals like 10.50
-                    imeAction = ImeAction.Done
-                ),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
-                modifier = Modifier.padding(5.dp),
-                // collapse keyboard on done click
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                    }
+            Button( // back to play screen
+                onClick = { navController.navigate("play") },
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) { Text("Exit game") }
+            Column(
+                modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = winStatusText,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.height(30.dp)
                 )
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
-            {
-                Image(
-                    painter = painterResource(slot1.myRes),
-                    contentDescription = "slot 1",
-                    modifier = Modifier.size(100.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Image(
-                    painter = painterResource(slot2.myRes),
-                    contentDescription = "slot 2",
-                    modifier = Modifier.size(100.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Image(
-                    painter = painterResource(slot3.myRes),
-                    contentDescription = "slot 3",
-                    modifier = Modifier.size(100.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(onClick = {
-                    winStatusText = ""
-                    var myBet = bet.toDoubleOrNull()
-                    if(myBet == null) myBet = 0.0
-                    if (myBet < 10.0) {
-                        Toast.makeText(context, "Minimum bet $10",
-                            Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    if (!bet(myBet, viewModel)) {
-                        Toast.makeText(context, "Insufficient funds",
-                            Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    if (user != null) {
-                        // update balance text to subtract current bet
-                        var newBalance = balance - myBet
-                        slot1 = slots[CasinoRng.nextInt(0, slots.size)]
-                        slot2 = slots[CasinoRng.nextInt(0, slots.size)]
-                        slot3 = slots[CasinoRng.nextInt(0, slots.size)]
-
-                        if (slot1.myId == slot2.myId && slot2.myId == slot3.myId) {
-                            // update db balance and win stats
-                            val win: Double = (myBet * slot1.myId)
-                            newBalance += win // update game balance on win
-                            viewModel.updateStats(
-                                userId = user.user_ID,
-                                wins = 1,
-                                sWins = 1,
-                                winnings = win
-                            )
-                            winStatusText = "You won: $win!"
-
-                        } else { // update db loss stats
-                            viewModel.updateStats(
-                                userId = user.user_ID,
-                                lossAmt = myBet,
-                                sLosses = 1,
-                                losses = 1
-                            )
+                OutlinedTextField(
+                    value = bet,
+                    onValueChange = { bet = it },
+                    label = { Text("Bet") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal, // Allows decimals like 10.50
+                        imeAction = ImeAction.Done
+                    ),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    ),
+                    modifier = Modifier.padding(5.dp),
+                    // collapse keyboard on done click
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            keyboardController?.hide()
                         }
-                        balance = newBalance
-                        viewModel.updateBalance(user.user_ID, balance)
-                        // update db balance for bet and win ^
-                    }
+                    )
+                )
 
-                })
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
                 {
-                    Text(text = stringResource(R.string.spinBtnTxt))
+                    Image(
+                        painter = painterResource(slot1.myRes),
+                        contentDescription = "slot 1",
+                        modifier = Modifier.size(100.dp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Image(
+                        painter = painterResource(slot2.myRes),
+                        contentDescription = "slot 2",
+                        modifier = Modifier.size(100.dp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Image(
+                        painter = painterResource(slot3.myRes),
+                        contentDescription = "slot 3",
+                        modifier = Modifier.size(100.dp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Button(onClick = {
+                        winStatusText = ""
+                        var myBet = bet.toDoubleOrNull()
+                        if (myBet == null) myBet = 0.0
+                        if (myBet < 10.0) {
+                            Toast.makeText(
+                                context, "Minimum bet $10",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+                        if (!bet(myBet, viewModel)) {
+                            Toast.makeText(
+                                context, "Insufficient funds",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+                        if (user != null) {
+                            // update balance text to subtract current bet
+                            var newBalance = balance - myBet
+                            slot1 = slots[CasinoRng.nextInt(0, slots.size)]
+                            slot2 = slots[CasinoRng.nextInt(0, slots.size)]
+                            slot3 = slots[CasinoRng.nextInt(0, slots.size)]
+
+                            if (slot1.myId == slot2.myId && slot2.myId == slot3.myId) {
+                                // update db balance and win stats
+                                val win: Double = (myBet * slot1.myId)
+                                newBalance += win // update game balance on win
+                                viewModel.updateStats(
+                                    userId = user.user_ID,
+                                    wins = 1,
+                                    sWins = 1,
+                                    winnings = win
+                                )
+                                winStatusText = "You won: $win!"
+
+                            } else { // update db loss stats
+                                viewModel.updateStats(
+                                    userId = user.user_ID,
+                                    lossAmt = myBet,
+                                    sLosses = 1,
+                                    losses = 1
+                                )
+                            }
+                            balance = newBalance
+                            viewModel.updateBalance(user.user_ID, balance)
+                            // update db balance for bet and win ^
+                        }
+
+                    })
+                    {
+                        Text(text = stringResource(R.string.spinBtnTxt))
+                    }
                 }
             }
         }
@@ -1036,17 +1127,18 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
     }
     else {
 
-    var diceResult1 by remember { mutableIntStateOf(1) }
-    var diceResult2 by remember { mutableIntStateOf(2) }
+        var diceResult1 by remember { mutableIntStateOf(1) }
+        var diceResult2 by remember { mutableIntStateOf(2) }
 
-    val diceSkin = remember(user.activeSkins) {
-        val defaultSkin = Skin.masterSkinList.masterSkinList.getOrNull(1) as? Skin.DiceSkin
-            ?: Skin.masterSkinList.masterSkinList.first { it is Skin.DiceSkin } as Skin.DiceSkin
+        val diceSkin = remember(user.activeSkins) {
+            val defaultSkin = Skin.masterSkinList.masterSkinList.getOrNull(1) as? Skin.DiceSkin
+                ?: Skin.masterSkinList.masterSkinList.first { it is Skin.DiceSkin } as Skin.DiceSkin
 
-        val skinIds = user.activeSkins.split(",").mapNotNull { it.toIntOrNull() }
-        val diceSkinID = skinIds.getOrNull(1) ?: 1
-        Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.DiceSkin ?: defaultSkin
-    }
+            val skinIds = user.activeSkins.split(",").mapNotNull { it.toIntOrNull() }
+            val diceSkinID = skinIds.getOrNull(1) ?: 1
+            Skin.masterSkinList.masterSkinList.getOrNull(diceSkinID) as? Skin.DiceSkin
+                ?: defaultSkin
+        }
 
 //    val diceSkin = remember(user.activeSkins) {
 //        val skins = user.activeSkins.split(",").map { it.toInt() }
@@ -1055,207 +1147,221 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
 //        Skin.masterSkinList.masterSkinList[skins[1]] as Skin.DiceSkin
 //    }
 
-    val imageResource1 = when (diceResult1) {
-        1 -> diceSkin.dice1
-        2 -> diceSkin.dice2
-        3 -> diceSkin.dice3
-        4 -> diceSkin.dice4
-        5 -> diceSkin.dice5
-        else -> diceSkin.dice6
-    }
-
-    val imageResource2 = when (diceResult2) {
-        1 -> diceSkin.dice1
-        2 -> diceSkin.dice2
-        3 -> diceSkin.dice3
-        4 -> diceSkin.dice4
-        5 -> diceSkin.dice5
-        else -> diceSkin.dice6
-    }
-
-    var bet by remember { mutableStateOf("10") }
-    var winStatusText by remember { mutableStateOf("7 or 11 wins on first roll!") }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(12.dp) // Gives safe margins on all edges of the screen
-    ) {
-        Box(
-            modifier = Modifier
-                .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
-                .padding(10.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "  Balance: ",
-                    color = Color.Gray,
-                    fontSize = 15.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "$balance $",
-                    color = Color(0xFF2E7D32),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+        val imageResource1 = when (diceResult1) {
+            1 -> diceSkin.dice1
+            2 -> diceSkin.dice2
+            3 -> diceSkin.dice3
+            4 -> diceSkin.dice4
+            5 -> diceSkin.dice5
+            else -> diceSkin.dice6
         }
-        Button(
-            onClick = { navController.navigate("play") },
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) { Text("Exit game") }
-    }
 
-        Column(
-        modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-            Text(
-                text = winStatusText,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF4CAF50),
-                modifier = Modifier.height(30.dp)
+        val imageResource2 = when (diceResult2) {
+            1 -> diceSkin.dice1
+            2 -> diceSkin.dice2
+            3 -> diceSkin.dice3
+            4 -> diceSkin.dice4
+            5 -> diceSkin.dice5
+            else -> diceSkin.dice6
+        }
+
+        var bet by remember { mutableStateOf("10") }
+        var winStatusText by remember { mutableStateOf("7 or 11 wins on first roll!") }
+        var myBg by remember { mutableIntStateOf(R.drawable.green_bg) }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(myBg),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
-
-            OutlinedTextField(
-                value = bet,
-                onValueChange = { bet = it },
-                label = { Text("Bet") },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
-                modifier = Modifier.padding(5.dp),
-                // force number pad
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done // bottom right key = done
-                ),
-                // collapse keyboard on done click
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp) // Gives safe margins on all edges of the screen
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
+                        .padding(10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "  Balance: ",
+                            color = Color.Gray,
+                            fontSize = 15.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "$balance $",
+                            color = Color(0xFF2E7D32),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
+                }
+                Button(
+                    onClick = { navController.navigate("play") },
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) { Text("Exit game") }
+            }
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = winStatusText,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.height(30.dp)
                 )
-            )
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
-            {
-                Image(
-                    painter = painterResource(imageResource1),
-                    contentDescription = "dice 1",
-                    modifier = Modifier.size(100.dp)
+                OutlinedTextField(
+                    value = bet,
+                    onValueChange = { bet = it },
+                    label = { Text("Bet") },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    ),
+                    modifier = Modifier.padding(5.dp),
+                    // force number pad
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done // bottom right key = done
+                    ),
+                    // collapse keyboard on done click
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            keyboardController?.hide()
+                        }
+                    )
                 )
 
-                Image(
-                    painter = painterResource(imageResource2),
-                    contentDescription = "dice 2",
-                    modifier = Modifier.size(100.dp)
-                )
+                Spacer(modifier = Modifier.height(20.dp))
 
-                var isFirstClick by remember { mutableStateOf(true) }
-                var pointValue by remember { mutableIntStateOf(0) }
+                Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
+                {
+                    Image(
+                        painter = painterResource(imageResource1),
+                        contentDescription = "dice 1",
+                        modifier = Modifier.size(100.dp)
+                    )
 
-                Button(onClick = {
-                    if (user == null) return@Button
-                    else {
-                        winStatusText = ""
-                        diceResult1 = CasinoRng.nextInt(1, 6)
-                        diceResult2 = CasinoRng.nextInt(1, 6)
-                        val myBet = bet.toDoubleOrNull() ?: 0.0
-                        val sum = diceResult1 + diceResult2
+                    Image(
+                        painter = painterResource(imageResource2),
+                        contentDescription = "dice 2",
+                        modifier = Modifier.size(100.dp)
+                    )
 
-                        if (isFirstClick) { // initial roll
-                            if (myBet < 10.0) {
-                                Toast.makeText(
-                                    context, "Minimum bet $10",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@Button
-                            }
-                            if (myBet > balance) {
-                                Toast.makeText(
-                                    context, "Insufficient funds",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@Button
-                            }
-                            if (!bet(myBet, viewModel)) {
-                                Toast.makeText(
-                                    context, "Can't bet this",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@Button
-                            }
-                            balance -= myBet * 1.0
-                            viewModel.updateBalance(user.user_ID, balance)
-                            when (sum) {
-                                7, 11 -> {
-                                    val win: Double = myBet * 2.0
-                                    balance += win
-                                    viewModel.updateBalance(user.user_ID, balance)
-                                    viewModel.updateStats(
-                                        userId = user.user_ID, wins = 1, winnings = win,
-                                        cWins = 1
-                                    )
-                                    winStatusText = "You won: $win! Play again?"
-                                    isFirstClick = true
+                    var isFirstClick by remember { mutableStateOf(true) }
+                    var pointValue by remember { mutableIntStateOf(0) }
+
+                    Button(onClick = {
+                        if (user == null) return@Button
+                        else {
+                            winStatusText = ""
+                            diceResult1 = CasinoRng.nextInt(1, 6)
+                            diceResult2 = CasinoRng.nextInt(1, 6)
+                            val myBet = bet.toDoubleOrNull() ?: 0.0
+                            val sum = diceResult1 + diceResult2
+
+                            if (isFirstClick) { // initial roll
+                                if (myBet < 10.0) {
+                                    Toast.makeText(
+                                        context, "Minimum bet $10",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
                                 }
-
-                                2, 3, 12 -> {
-                                    winStatusText = "Craps! Play again?"
-                                    viewModel.updateStats(
-                                        userId = user.user_ID, losses = 1, lossAmt = myBet,
-                                        cLosses = 1
-                                    )
-                                    viewModel.updateBalance(user.user_ID, balance)
-                                    isFirstClick = true
+                                if (myBet > balance) {
+                                    Toast.makeText(
+                                        context, "Insufficient funds",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
                                 }
-
-                                else -> {
-                                    pointValue = sum
-                                    winStatusText = "$sum wins, 7 loses. Roll again!"
-                                    isFirstClick = false
+                                if (!bet(myBet, viewModel)) {
+                                    Toast.makeText(
+                                        context, "Can't bet this",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
                                 }
-                            }
-                        } else {
-                            when (sum) {
-                                pointValue -> {
-                                    val win = myBet * 2.0
-                                    balance += win
-                                    viewModel.updateBalance(user.user_ID, balance)
-                                    viewModel.updateStats(
-                                        userId = user.user_ID, wins = 1,
-                                        winnings = win, cWins = 1
-                                    )
-                                    winStatusText = "You won $win! Play again?"
-                                    isFirstClick = true
-                                }
+                                balance -= myBet * 1.0
+                                viewModel.updateBalance(user.user_ID, balance)
+                                when (sum) {
+                                    7, 11 -> {
+                                        val win: Double = myBet * 2.0
+                                        balance += win
+                                        viewModel.updateBalance(user.user_ID, balance)
+                                        viewModel.updateStats(
+                                            userId = user.user_ID, wins = 1, winnings = win,
+                                            cWins = 1
+                                        )
+                                        winStatusText = "You won: $win! Play again?"
+                                        isFirstClick = true
+                                    }
 
-                                7 -> {
-                                    winStatusText = "7 loses. Play again?"
-                                    viewModel.updateStats(
-                                        userId = user.user_ID, losses = 1, cLosses = 1,
-                                        lossAmt = myBet
-                                    )
-                                    viewModel.updateBalance(user.user_ID, balance)
-                                    isFirstClick = true
-                                }
+                                    2, 3, 12 -> {
+                                        winStatusText = "Craps! Play again?"
+                                        viewModel.updateStats(
+                                            userId = user.user_ID, losses = 1, lossAmt = myBet,
+                                            cLosses = 1
+                                        )
+                                        viewModel.updateBalance(user.user_ID, balance)
+                                        isFirstClick = true
+                                    }
 
-                                else -> {
-                                    winStatusText = "Roll again"
+                                    else -> {
+                                        pointValue = sum
+                                        winStatusText = "$sum wins, 7 loses. Roll again!"
+                                        isFirstClick = false
+                                        myBg = R.drawable.red_bg
+                                    }
+                                }
+                            } else {
+                                when (sum) {
+                                    pointValue -> {
+                                        val win = myBet * 2.0
+                                        balance += win
+                                        viewModel.updateBalance(user.user_ID, balance)
+                                        viewModel.updateStats(
+                                            userId = user.user_ID, wins = 1,
+                                            winnings = win, cWins = 1
+                                        )
+                                        winStatusText = "You won $win! Play again?"
+                                        isFirstClick = true
+                                        myBg = R.drawable.green_bg
+                                    }
+
+                                    7 -> {
+                                        winStatusText = "7 loses. Play again?"
+                                        viewModel.updateStats(
+                                            userId = user.user_ID, losses = 1, cLosses = 1,
+                                            lossAmt = myBet
+                                        )
+                                        viewModel.updateBalance(user.user_ID, balance)
+                                        isFirstClick = true
+                                        myBg = R.drawable.green_bg
+                                    }
+
+                                    else -> {
+                                        winStatusText = "Roll again"
+                                    }
                                 }
                             }
                         }
+                    }) {
+                        Text(text = stringResource(R.string.rollBtnTxt))
                     }
-                }) {
-                    Text(text = stringResource(R.string.rollBtnTxt))
                 }
             }
         }
