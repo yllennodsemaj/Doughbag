@@ -1168,8 +1168,9 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                         winStatusText = ""
                         diceResult1 = CasinoRng.nextInt(1, 6)
                         diceResult2 = CasinoRng.nextInt(1, 6)
-                        val myBet = bet.toDoubleOrNull() ?: 0.0
                         val sum = diceResult1 + diceResult2
+                        val myBet = bet.toDoubleOrNull() ?: 0.0
+
 
                         if (isFirstClick) { // initial roll
                             if (myBet < 10.0) {
