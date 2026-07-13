@@ -1247,52 +1247,13 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Button(onClick = {
-                    if (user == null) return@Button
-                    else {
-                        winStatusText = ""
-                        diceResult1 = CasinoRng.nextInt(1, 6)
-                        diceResult2 = CasinoRng.nextInt(1, 6)
-                        val sum = diceResult1 + diceResult2
-                        val myBet = bet.toDoubleOrNull() ?: 0.0
-
-
-                        if (isFirstClick) { // initial roll
-                            if (myBet < 10.0) {
-                                Toast.makeText(
-                                    context, "Minimum bet $10",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@Button
-                            }
-                            if (myBet > balance) {
-                                Toast.makeText(
-                                    context, "Insufficient funds",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@Button
-                            }
-                            if (!bet(myBet, viewModel)) {
-                                Toast.makeText(
-                                    context, "Can't bet this",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@Button
-                            }
-                            balance -= myBet * 1.0
-                            viewModel.updateBalance(user.user_ID, balance)
-                            when (sum) {
-                                7, 11 -> {
-                                    val win: Double = myBet * 2.0
-                                    balance += win
-                                    viewModel.updateBalance(user.user_ID, balance)
-                                    viewModel.updateStats(
-                                        userId = user.user_ID, wins = 1, winnings = win,
-                                        cWins = 1
-                                    )
-                                    winStatusText = "You won: $win! Play again?"
-                                    isFirstClick = true
-                                }
+                Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically)
+                {
+                    Image(
+                        painter = painterResource(imageResource1),
+                        contentDescription = "dice 1",
+                        modifier = Modifier.size(100.dp)
+                    )
 
                     Image(
                         painter = painterResource(imageResource2),
