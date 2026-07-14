@@ -280,7 +280,7 @@ fun ChooseUser(navController: NavController, viewModel: DoughbagViewModel) {
 @Composable // after choosing a user, select a game to play, or shop, inventory, or go back home
 fun Play(navController: NavController) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
-
+    // change the background
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(R.drawable.menu3_bg),
