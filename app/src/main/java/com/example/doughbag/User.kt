@@ -21,6 +21,6 @@ data class User(
     var sLosses: Int = 0,
     var winnings: Double = 0.0,
     var losses: Double = 0.0,
-    var ownedSkinIds: String = "0,1,2,3,4,5,6",
+    var ownedSkinIds: String = "0,1,2",
     var activeSkins: String = "0,1,2"
 )
