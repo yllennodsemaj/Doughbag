@@ -68,23 +68,6 @@ class DoughbagViewModel(private val userDao: UserDao) : ViewModel() {
     fun getOwnedIds(user: User): List<Int> {
         return user.ownedSkinIds.split(",").mapNotNull { it.toIntOrNull() }
     }
-//    fun setActiveSkin(user: User, skin: Skin){
-//        val listActiveSkins: MutableList<Int> = // transform string of active skins to mutable list
-//            user.activeSkins.split(",").mapNotNull{ it.toIntOrNull() }.toMutableList()
-//        if (skin is Skin.WheelSkin) {
-//            listActiveSkins[0] = skin.skinID
-//        }
-//        else if (skin is Skin.DiceSkin) {
-//            listActiveSkins[1] = skin.skinID
-//        }
-//        else if (skin is Skin.SlotSkin) {
-//            listActiveSkins[2] = skin.skinID
-//        }
-//        user.activeSkins = listActiveSkins.joinToString(separator = ",")
-//        return
-//    }
-
-    // Chat Jipity
     fun setActiveSkin(user: User, skin: Skin) {
         val listActiveSkins = user.activeSkins
             .split(",")

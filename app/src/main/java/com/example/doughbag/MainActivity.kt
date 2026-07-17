@@ -1397,27 +1397,89 @@ fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
 
 // not yet implemented
 @Composable
-fun Shop(navController: NavController, userViewModel: DoughbagViewModel) {
+fun Shop(navController: NavController, viewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    val currentUser = userViewModel.activeUser
+    val context = LocalContext.current
+    val allUsers by viewModel.userList.collectAsState()
+    val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
+    if(user == null) {
+        navController.navigate("chooseUser")
+        return
+    }
+     else {
+        val allSkins: List<Skin> = Skin.masterSkinList.masterSkinList
+        val unpurchasedIDs: MutableList<Int> = mutableListOf()
+        for(skin in allSkins){
+            unpurchasedIDs.add(skin.skinID) // starts with all skins
+        }
+        val userOwnedIDs = user.ownedSkinIds.split(",").mapNotNull { it.toIntOrNull() }
+        for(skinID in userOwnedIDs){
+            for(skin in allSkins) {
+                if(skin.skinID == skinID) {
+                    unpurchasedIDs.remove(skin.skinID)
+                } // remove user owned skins from unpurchasedIDs list
+            }
+        }
+        val unpurchasedSkins: MutableList<Skin> = mutableListOf()
+        for(skinID in unpurchasedIDs) {
+            for(skin in allSkins) {
+                if(skin.skinID == skinID)
+                    unpurchasedSkins.add(skin)
+            }
+        }
 
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("The shop", fontSize = 24.sp)
+            LazyColumn {
+                items(unpurchasedSkins) { skin ->
+                    Button(onClick = {
+                        if(skin.skinPrice <= user.balance) {
+                            viewModel.updateBalance(user.user_ID, user.balance - skin.skinPrice)
+                            viewModel.purchaseSkin(user, skin.skinID)
+                            navController.navigate("shop")
+                        }
+                        else {
+                            Toast.makeText(
+                                context, "Insufficient funds",
+                                Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                    },
+                        modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)) {
+                        Text("Buy ${skin.skinName} - $${skin.skinPrice}")
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = { navController.navigate("play") }) { Text("Go back") }
+        }
+    }
 }
 
 @Composable
 fun Inventory(navController: NavController, viewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    val user = viewModel.activeUser
+    val allUsers by viewModel.userList.collectAsState()
+    val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
     val allSkins: List<Skin>
     val userOwnedIds: List<Int>
-    val myOwnedSkins: List<Skin>
+    val myOwnedSkins: MutableList<Skin> = mutableListOf()
     if(user == null) {
         navController.navigate("chooseUser")
     } else {
         allSkins = Skin.masterSkinList.masterSkinList
-        //userOwnedIds = allSkins
-        myOwnedSkins = allSkins
-        // filters user owned skins for inventory view
-
+        userOwnedIds = user.ownedSkinIds.split(",").mapNotNull { it.toIntOrNull() }
+        for(skinID in userOwnedIds){
+            for(skin in allSkins) {
+                if(skin.skinID == skinID) {
+                    myOwnedSkins.add(skin)
+                } //creates a list of user owned skins
+            }
+        }
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -1435,8 +1497,8 @@ fun Inventory(navController: NavController, viewModel: DoughbagViewModel) {
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = { navController.navigate("play") }) { Text("Go back") }
         }
     }
-
-
 }
