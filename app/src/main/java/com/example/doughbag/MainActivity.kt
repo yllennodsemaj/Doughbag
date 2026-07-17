@@ -1435,7 +1435,7 @@ fun Shop(navController: NavController, viewModel: DoughbagViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("My Inventory", fontSize = 24.sp)
+            Text("The shop", fontSize = 24.sp)
             LazyColumn {
                 items(unpurchasedSkins) { skin ->
                     Button(onClick = {
