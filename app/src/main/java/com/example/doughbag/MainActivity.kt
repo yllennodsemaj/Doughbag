@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -1265,97 +1264,94 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                     var pointValue by remember { mutableIntStateOf(0) }
 
                     Button(onClick = {
-                        if (user == null) return@Button
-                        else {
-                            winStatusText = ""
-                            diceResult1 = CasinoRng.nextInt(1, 6)
-                            diceResult2 = CasinoRng.nextInt(1, 6)
-                            val myBet = bet.toDoubleOrNull() ?: 0.0
-                            val sum = diceResult1 + diceResult2
+                        winStatusText = ""
+                        diceResult1 = CasinoRng.nextInt(1, 6)
+                        diceResult2 = CasinoRng.nextInt(1, 6)
+                        val myBet = bet.toDoubleOrNull() ?: 0.0
+                        val sum = diceResult1 + diceResult2
 
-                            if (isFirstClick) { // initial roll
-                                if (myBet < 10.0) {
-                                    Toast.makeText(
-                                        context, "Minimum bet $10",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    return@Button
+                        if (isFirstClick) { // initial roll
+                            if (myBet < 10.0) {
+                                Toast.makeText(
+                                    context, "Minimum bet $10",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            if (myBet > balance) {
+                                Toast.makeText(
+                                    context, "Insufficient funds",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            if (!bet(myBet, viewModel)) {
+                                Toast.makeText(
+                                    context, "Can't bet this",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            balance -= myBet * 1.0
+                            viewModel.updateBalance(user.user_ID, balance)
+                            when (sum) {
+                                7, 11 -> {
+                                    val win: Double = myBet * 2.0
+                                    balance += win
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, wins = 1, winnings = win,
+                                        cWins = 1
+                                    )
+                                    winStatusText = "You won: $win! Play again?"
+                                    isFirstClick = true
                                 }
-                                if (myBet > balance) {
-                                    Toast.makeText(
-                                        context, "Insufficient funds",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    return@Button
+
+                                2, 3, 12 -> {
+                                    winStatusText = "Craps! Play again?"
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, losses = 1, lossAmt = myBet,
+                                        cLosses = 1
+                                    )
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    isFirstClick = true
                                 }
-                                if (!bet(myBet, viewModel)) {
-                                    Toast.makeText(
-                                        context, "Can't bet this",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    return@Button
+
+                                else -> {
+                                    pointValue = sum
+                                    winStatusText = "$sum wins, 7 loses. Roll again!"
+                                    isFirstClick = false
+                                    myBg = R.drawable.red_bg
                                 }
-                                balance -= myBet * 1.0
-                                viewModel.updateBalance(user.user_ID, balance)
-                                when (sum) {
-                                    7, 11 -> {
-                                        val win: Double = myBet * 2.0
-                                        balance += win
-                                        viewModel.updateBalance(user.user_ID, balance)
-                                        viewModel.updateStats(
-                                            userId = user.user_ID, wins = 1, winnings = win,
-                                            cWins = 1
-                                        )
-                                        winStatusText = "You won: $win! Play again?"
-                                        isFirstClick = true
-                                    }
-
-                                    2, 3, 12 -> {
-                                        winStatusText = "Craps! Play again?"
-                                        viewModel.updateStats(
-                                            userId = user.user_ID, losses = 1, lossAmt = myBet,
-                                            cLosses = 1
-                                        )
-                                        viewModel.updateBalance(user.user_ID, balance)
-                                        isFirstClick = true
-                                    }
-
-                                    else -> {
-                                        pointValue = sum
-                                        winStatusText = "$sum wins, 7 loses. Roll again!"
-                                        isFirstClick = false
-                                        myBg = R.drawable.red_bg
-                                    }
+                            }
+                        } else {
+                            when (sum) {
+                                pointValue -> {
+                                    val win = myBet * 2.0
+                                    balance += win
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, wins = 1,
+                                        winnings = win, cWins = 1
+                                    )
+                                    winStatusText = "You won $win! Play again?"
+                                    isFirstClick = true
+                                    myBg = R.drawable.green_bg
                                 }
-                            } else {
-                                when (sum) {
-                                    pointValue -> {
-                                        val win = myBet * 2.0
-                                        balance += win
-                                        viewModel.updateBalance(user.user_ID, balance)
-                                        viewModel.updateStats(
-                                            userId = user.user_ID, wins = 1,
-                                            winnings = win, cWins = 1
-                                        )
-                                        winStatusText = "You won $win! Play again?"
-                                        isFirstClick = true
-                                        myBg = R.drawable.green_bg
-                                    }
 
-                                    7 -> {
-                                        winStatusText = "7 loses. Play again?"
-                                        viewModel.updateStats(
-                                            userId = user.user_ID, losses = 1, cLosses = 1,
-                                            lossAmt = myBet
-                                        )
-                                        viewModel.updateBalance(user.user_ID, balance)
-                                        isFirstClick = true
-                                        myBg = R.drawable.green_bg
-                                    }
+                                7 -> {
+                                    winStatusText = "7 loses. Play again?"
+                                    viewModel.updateStats(
+                                        userId = user.user_ID, losses = 1, cLosses = 1,
+                                        lossAmt = myBet
+                                    )
+                                    viewModel.updateBalance(user.user_ID, balance)
+                                    isFirstClick = true
+                                    myBg = R.drawable.green_bg
+                                }
 
-                                    else -> {
-                                        winStatusText = "Roll again"
-                                    }
+                                else -> {
+                                    winStatusText = "Roll again"
                                 }
                             }
                         }
