@@ -1403,18 +1403,20 @@ fun Statistics(navController: NavController, viewModel: DoughbagViewModel) {
 @Composable
 fun Shop(navController: NavController, viewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    val user = viewModel.activeUser
-    val allSkins: List<Skin> = Skin.masterSkinList.masterSkinList
-    val unpurchasedIDs: MutableList<Int> = mutableListOf()
-    for(skin in allSkins){
-        unpurchasedIDs.add(skin.skinID) // starts with all skins
-    }
-    var userOwnedIDs: List<Int>
-    val myOwnedSkins: MutableList<Skin> = mutableListOf()
+    val context = LocalContext.current
+    val allUsers by viewModel.userList.collectAsState()
+    val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
     if(user == null) {
         navController.navigate("chooseUser")
-    } else {
-        userOwnedIDs = user.ownedSkinIds.split(",").mapNotNull { it.toIntOrNull() }
+        return
+    }
+     else {
+        val allSkins: List<Skin> = Skin.masterSkinList.masterSkinList
+        val unpurchasedIDs: MutableList<Int> = mutableListOf()
+        for(skin in allSkins){
+            unpurchasedIDs.add(skin.skinID) // starts with all skins
+        }
+        val userOwnedIDs = user.ownedSkinIds.split(",").mapNotNull { it.toIntOrNull() }
         for(skinID in userOwnedIDs){
             for(skin in allSkins) {
                 if(skin.skinID == skinID) {
@@ -1439,10 +1441,17 @@ fun Shop(navController: NavController, viewModel: DoughbagViewModel) {
             LazyColumn {
                 items(unpurchasedSkins) { skin ->
                     Button(onClick = {
-                        if(skin.skinPrice > user.balance) return@Button
-                        else viewModel.updateBalance(user.user_ID, user.balance - skin.skinPrice)
-                        viewModel.purchaseSkin(user, skin.skinID)
-                        navController.navigate("shop")
+                        if(skin.skinPrice <= user.balance) {
+                            viewModel.updateBalance(user.user_ID, user.balance - skin.skinPrice)
+                            viewModel.purchaseSkin(user, skin.skinID)
+                            navController.navigate("shop")
+                        }
+                        else {
+                            Toast.makeText(
+                                context, "Insufficient funds",
+                                Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
                     },
                         modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(0.6f)) {
                         Text("Buy ${skin.skinName} - $${skin.skinPrice}")
@@ -1458,7 +1467,8 @@ fun Shop(navController: NavController, viewModel: DoughbagViewModel) {
 @Composable
 fun Inventory(navController: NavController, viewModel: DoughbagViewModel) {
     SetScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    val user = viewModel.activeUser
+    val allUsers by viewModel.userList.collectAsState()
+    val user = allUsers.find { it.user_ID == viewModel.activeUser?.user_ID }
     val allSkins: List<Skin>
     val userOwnedIds: List<Int>
     val myOwnedSkins: MutableList<Skin> = mutableListOf()
