@@ -653,9 +653,9 @@ fun Roulette(navController: NavController, viewModel: DoughbagViewModel){
                                 } else {
                                     "You lost."
                                 }
-                                thisGameBalance += win
-                                viewModel.updateBalance(liveUser.user_ID, thisGameBalance)
                             }
+                            thisGameBalance += win
+                            viewModel.updateBalance(liveUser.user_ID, thisGameBalance)
                         }
 
                     }) {
@@ -1163,7 +1163,9 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
             5 -> diceSkin.dice5
             else -> diceSkin.dice6
         }
-
+        var isFirstClick by remember { mutableStateOf(true) }
+        var pointValue by remember { mutableIntStateOf(0) }
+        var lockedBet by remember { mutableStateOf(0.0) }
         var bet by remember { mutableStateOf("10") }
         var winStatusText by remember { mutableStateOf("7 or 11 wins on first roll!") }
         var myBg by remember { mutableIntStateOf(R.drawable.green_bg) }
@@ -1222,13 +1224,18 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
 
                 OutlinedTextField(
                     value = bet,
+                    enabled = isFirstClick,
                     onValueChange = { bet = it },
                     label = { Text("Bet") },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black
+                        unfocusedTextColor = Color.Black,
+                        disabledContainerColor = Color(0xFFBDBDBD),
+                        disabledTextColor = Color.DarkGray,
+                        disabledLabelColor = Color.DarkGray,
+                        disabledIndicatorColor = Color.Gray
                     ),
                     modifier = Modifier.padding(5.dp),
                     // force number pad
@@ -1260,14 +1267,11 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                         modifier = Modifier.size(100.dp)
                     )
 
-                    var isFirstClick by remember { mutableStateOf(true) }
-                    var pointValue by remember { mutableIntStateOf(0) }
-
                     Button(onClick = {
                         winStatusText = ""
-                        diceResult1 = CasinoRng.nextInt(1, 6)
-                        diceResult2 = CasinoRng.nextInt(1, 6)
-                        val myBet = bet.toDoubleOrNull() ?: 0.0
+                        diceResult1 = CasinoRng.nextInt(1, 7)
+                        diceResult2 = CasinoRng.nextInt(1, 7)
+                        val myBet = if (isFirstClick) (bet.toDoubleOrNull() ?: 0.0) else lockedBet
                         val sum = diceResult1 + diceResult2
 
                         if (isFirstClick) { // initial roll
@@ -1293,6 +1297,7 @@ fun Craps(navController: NavController, viewModel: DoughbagViewModel) {
                                 return@Button
                             }
                             balance -= myBet * 1.0
+                            lockedBet = myBet
                             viewModel.updateBalance(user.user_ID, balance)
                             when (sum) {
                                 7, 11 -> {
